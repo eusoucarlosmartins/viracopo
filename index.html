@@ -489,8 +489,6 @@ body { background: var(--black); color: var(--white); font-family: 'Barlow', san
   </div>
 </section>
 
-<!-- PLACAR AO VIVO DINÂMICO -->
-<div id="liveScoreBanner" style="display:none;"></div>
 
 <!-- RESULTADOS RECENTES -->
 <section class="site-section results-section" id="resultados">
@@ -729,7 +727,6 @@ async function sbLoad() {
       if (c.key === 'vote_window')        DB.voteWindow       = c.value;
       if (c.key === 'sponsors')           DB.sponsors         = c.value;
       if (c.key === 'convocados')         { try { DB.convocados    = JSON.parse(c.value); } catch(e){} }
-      if (c.key === 'live_score')         { try { DB.liveScore     = JSON.parse(c.value); } catch(e){} }
       if (c.key === 'caixa')              { try { DB.caixa         = JSON.parse(c.value); } catch(e){} }
       if (c.key === 'mensalidade_valor')  DB.mensalidadeValor = parseFloat(c.value) || 30;
       if (c.key === 'elenco_seasons')     { try { const es = JSON.parse(c.value); DB.elencoSeasons = es; DB.seasons = es; } catch(e){} }
@@ -744,7 +741,9 @@ async function sbLoad() {
           us: d.us, them: d.them, formation: d.formation || '4-3-3',
           posSlots: d.pos_slots || {}, playerIds: d.player_ids || [],
           scorers: d.scorers || [], assists: d.assists || [],
-          mvp: d.mvp, obs: d.obs || ''
+          mvp: d.mvp, obs: d.obs || '',
+          events: d.events || [],
+          scheduleDate: d.date, scheduleAdv: d.adversary
         }));
       }
     } catch(e) { console.warn('Dossies table not yet created — run SQL migration.'); }
@@ -753,8 +752,18 @@ async function sbLoad() {
     renderPublicSite();
   } catch(e) {
     showLoadingOverlay(false);
-    console.error('Supabase load error:', e);
-    showNotif('⚠️ Erro ao carregar dados. Verifique a URL/Key do Supabase.', true);
+    const isNetworkErr = e.message && (e.message.includes('fetch') || e.message.includes('network') || e.message.includes('ERR_'));
+    if (isNetworkErr) {
+      console.warn('Supabase offline — modo local ativo.', e.message);
+      // Show subtle offline badge, not a scary red error
+      const tag = document.getElementById('localModeTag');
+      if (tag) { tag.style.display = 'inline'; tag.textContent = '🔴 OFFLINE'; tag.title = 'Sem conexão com Supabase. Abra o arquivo localmente para sincronizar.'; }
+      renderPublicSite();
+    } else {
+      console.error('Supabase load error:', e);
+      showNotif('⚠️ Erro ao carregar dados. Verifique a URL/Key do Supabase.', true);
+      renderPublicSite();
+    }
   }
 }
 
@@ -821,7 +830,6 @@ async function sbSaveConfig(key) {
   else if (key === 'vote_window')  val = DB.voteWindow;
   else if (key === 'sponsors')     val = DB.sponsors;
   else if (key === 'convocados')   val = JSON.stringify(DB.convocados || []);
-  else if (key === 'live_score')   val = JSON.stringify(DB.liveScore || {});
   else if (key === 'caixa')        val = JSON.stringify(DB.caixa || { saldo:0, transacoes:[] });
   else if (key === 'mensalidade_valor') val = String(DB.mensalidadeValor || 30);
   else if (key === 'elenco_seasons') val = JSON.stringify(DB.elencoSeasons || {});
@@ -850,7 +858,8 @@ async function sbSaveDossie(d) {
     us: d.us, them: d.them, formation: d.formation,
     pos_slots: d.posSlots||{}, player_ids: d.playerIds||[],
     scorers: d.scorers||[], assists: d.assists||[],
-    mvp: d.mvp||null, obs: d.obs||''
+    mvp: d.mvp||null, obs: d.obs||'',
+    events: d.events||[]
   }]);
 }
 async function sbDeleteDossie(id) {
@@ -977,7 +986,6 @@ const DB = {
   lineup: { starting: [], bench: [], formation: '4-3-3', posSlots: {} },
   sumulas: [],
   dossies: [],
-  liveScore: { active: false, us: 0, them: 0, adversary: '', time: 0, events: [] },
   caixa: { saldo: 0, transacoes: [] },
   convocados: [],
   mensalidadeValor: 30,
@@ -1260,33 +1268,6 @@ function renderPublicSite() {
     }).join('') || '<p style="font-family:Oswald,sans-serif;font-size:13px;letter-spacing:2px;color:#555;text-align:center;padding:30px;">Nenhum jogo em ' + pubAgendaSeason + '.</p>';
   }
 
-  // ── Live Score banner ──
-  const liveBanner = document.getElementById('liveScoreBanner');
-  if (liveBanner) {
-    const ls = DB.liveScore;
-    if (ls && ls.active) {
-      liveBanner.style.display = 'block';
-      const evHtml = (ls.events && ls.events.length)
-        ? '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px;">' +
-          [...ls.events].reverse().slice(0,5).map(ev =>
-            '<span style="padding:3px 10px;background:rgba(255,255,255,0.05);border-radius:12px;font-family:Oswald,sans-serif;font-size:11px;color:var(--cream);">' +
-            (ev.type==='gol'?'⚽':ev.type==='amarelo'?'🟨':'🟥') + ' ' + ev.playerName + ' ' + ev.time + "'" +
-            '</span>').join('') + '</div>'
-        : '';
-      liveBanner.innerHTML = '<section style="padding:20px;background:linear-gradient(135deg,rgba(46,204,113,0.12),transparent);border-top:2px solid rgba(46,204,113,0.35);border-bottom:1px solid rgba(46,204,113,0.2);">' +
-        '<div style="max-width:700px;margin:0 auto;text-align:center;">' +
-        '<div style="display:flex;align-items:center;gap:8px;justify-content:center;margin-bottom:12px;">' +
-        '<div style="width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 1s infinite;"></div>' +
-        '<span style="font-family:Oswald,sans-serif;font-size:11px;letter-spacing:4px;color:var(--green);">AO VIVO ' + (ls.time||0) + "'" + '</span></div>' +
-        '<div style="display:flex;align-items:center;justify-content:center;gap:20px;">' +
-        '<div><div style="font-family:Oswald,sans-serif;font-size:9px;letter-spacing:3px;color:var(--gold);margin-bottom:4px;">VIRA COPO FC</div>' +
-        '<div style="font-family:Bebas Neue,sans-serif;font-size:72px;color:var(--white);line-height:1;">' + ls.us + '</div></div>' +
-        '<div style="font-family:Bebas Neue,sans-serif;font-size:44px;color:#555;">x</div>' +
-        '<div><div style="font-family:Oswald,sans-serif;font-size:9px;letter-spacing:3px;color:#888;margin-bottom:4px;">' + (ls.adversary||'ADVERSÁRIO') + '</div>' +
-        '<div style="font-family:Bebas Neue,sans-serif;font-size:72px;color:#999;line-height:1;">' + ls.them + '</div></div>' +
-        '</div>' + evHtml + '</div></section>';
-    } else { liveBanner.style.display = 'none'; liveBanner.innerHTML = ''; }
-  }
 }
 
 // ══════════════════════════════════════════════
@@ -1327,7 +1308,6 @@ function buildAdminPanel() {
       { id:'votacao',   label:'Votação MVP' },
       { id:'presenca',  label:'Gestão Presença' },
       { id:'jogo',      label:'Jogo / Escalação' },
-      { id:'placar',    label:'⚡ Placar Ao Vivo' },
       { id:'sumula',    label:'Súmula' },
       { id:'ranking',   label:'Ranking' },
       { id:'financeiro',label:'Financeiro' },
@@ -1340,7 +1320,6 @@ function buildAdminPanel() {
       { id:'votacao',   label:'Votação MVP' },
       { id:'presenca',  label:'Presença' },
       { id:'jogo',      label:'Jogo / Escalação' },
-      { id:'placar',    label:'⚡ Placar Ao Vivo' },
       { id:'sumula',    label:'Súmula' },
       { id:'agenda',    label:'Agenda' },
       { id:'ranking',   label:'Ranking' },
@@ -1389,7 +1368,6 @@ function renderPane(id) {
     financeiro: renderFinanceiro,
     usuarios: renderUsuarios,
     convocacao: renderConvocacao,
-    placar: renderPlacarAoVivo,
     uniforme: renderUniforme,
     patrocinadores: renderPatrocinadores
   };
@@ -2174,13 +2152,23 @@ function renderDossie(el) {
       ? `<span style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:${resColor};">${sum.us}×${sum.them}</span>
          <span class="badge" style="font-size:9px;background:${resColor};color:#fff;margin-left:4px;">${resLabel}</span>`
       : `<span style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:2px;color:#555;">SEM SÚMULA</span>`;
+    // Mini feed de eventos (gols e cartões com minuto)
+    const evFeed = (sum && sum.events && sum.events.length)
+      ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">
+          ${[...sum.events].sort((a,b)=>(a.minute||0)-(b.minute||0)).map(ev =>
+            `<span style="display:inline-flex;align-items:center;gap:3px;background:rgba(255,255,255,0.04);border:1px solid #2a2a2a;padding:2px 6px;font-family:'Oswald',sans-serif;font-size:10px;color:${ev.type==='amarelo'?'var(--gold)':ev.type==='vermelho'?'var(--red-light)':ev.type==='golAdv'?'#666':'var(--cream)'};">
+              ${ev.type==='gol'?'⚽':ev.type==='golAdv'?'⚽':ev.type==='amarelo'?'🟨':'🟥'}
+              ${ev.minute?ev.minute+"'":''} ${ev.playerName||''}${ev.type==='golAdv'?'(ADV)':''}
+            </span>`
+          ).join('')}
+        </div>` : '';
     const actionBtn = `<button onclick="selectGameForSumula('${g.date}','${(g.adversary||'').replace(/'/g,"\\'")}')"
         style="background:${sum?'rgba(200,150,62,0.12)':'rgba(204,26,26,0.1)'};border:1px solid ${sum?'rgba(200,150,62,0.35)':'rgba(204,26,26,0.3)'};color:${sum?'var(--gold)':'var(--red-light)'};padding:4px 10px;cursor:pointer;font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:1px;">
         ${sum?'✏️ EDITAR':'📋 PREENCHER'}</button>`;
     return `<tr>
       <td style="font-family:'Oswald',sans-serif;font-size:12px;white-space:nowrap;">${g.date}</td>
       <td>${logo}<strong>${g.adversary}</strong></td>
-      <td style="text-align:center;">${placar}</td>
+      <td style="text-align:center;">${placar}${evFeed}</td>
       <td style="font-size:11px;color:${g.fora?'var(--gold)':'#5599ff'};">${g.fora?'✈️ Fora':'🏠 Casa'}</td>
       <td style="font-size:11px;color:#666;">${g.local||''}</td>
       <td style="text-align:right;">${actionBtn}</td>
@@ -2303,6 +2291,9 @@ function openDossieForGame(date, adversary, isEdit) {
   container.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
+// ── Estado temporário dos eventos da súmula ──────────────────
+let _dossieEvents = []; // { type:'gol'|'amarelo'|'vermelho', playerId, playerName, minute, gc, team:'us'|'them' }
+
 function buildDossieForm(d, allPlayers, isEdit) {
   const formation  = d?.formation || '4-3-3';
   const posSlots   = d?.posSlots  || {};
@@ -2312,13 +2303,17 @@ function buildDossieForm(d, allPlayers, isEdit) {
   const schedDate  = d?.scheduleDate || d?.date || '';
   const schedAdv   = d?.scheduleAdv  || d?.adversary || '';
 
+  // Restore events from dossie if editing
+  _dossieEvents = (d?.events && d.events.length) ? [...d.events] : [];
+
   const formBtns = Object.keys(FORMATIONS).map(f =>
     `<button type="button" onclick="dossieSetFormation('${f}')"
       style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;padding:5px 12px;border:2px solid ${f===formation?'var(--red)':'#333'};background:${f===formation?'var(--red)':'transparent'};color:${f===formation?'#fff':'#666'};cursor:pointer;transition:all .15s;">${f}</button>`
   ).join('');
 
   const pAll = (allPlayers || DB.players.filter(p=>p.role!=='admin')).sort((a,b)=>a.name.localeCompare(b.name,'pt'));
-  const pOpts = pAll.map(p => `<option value="${p.id}">#${p.num} ${p.name}</option>`).join('');
+  const pOpts = pAll.map(p => `<option value="${p.id}">#${p.num} ${p.name.split(' ')[0]}</option>`).join('');
+  const pOptsNone = `<option value="">— Atleta —</option>` + pOpts;
 
   const maxRows = 7;
   const scorerRows = Array.from({length:maxRows},(_,i) => {
@@ -2329,7 +2324,7 @@ function buildDossieForm(d, allPlayers, isEdit) {
         <option value="">— Atleta —</option>${pOpts.replace(`value="${sc.id}"`,`value="${sc.id}" selected`)}
       </select>
       <input type="number" id="dsc_q${i}" min="1" max="9" value="${sc.qty||1}" style="width:40px;background:var(--mid);border:1px solid #444;color:var(--white);padding:5px;font-family:'Oswald',sans-serif;font-size:13px;text-align:center;outline:none;">
-      <label style="display:flex;align-items:center;gap:4px;font-family:'Oswald',sans-serif;font-size:10px;color:var(--red-light);cursor:pointer;white-space:nowrap;" title="Gol contra (conta para o adversário)">
+      <label style="display:flex;align-items:center;gap:4px;font-family:'Oswald',sans-serif;font-size:10px;color:var(--red-light);cursor:pointer;white-space:nowrap;" title="Gol contra">
         <input type="checkbox" id="dsc_gc${i}" ${sc.gc?'checked':''} style="accent-color:#e74c3c;"> GC
       </label>
     </div>`;
@@ -2346,6 +2341,8 @@ function buildDossieForm(d, allPlayers, isEdit) {
 
   const mvpOpts = `<option value="">— Nenhum —</option>` + pAll.map(p =>
     `<option value="${p.id}" ${d?.mvp==p.id?'selected':''}>#${p.num} ${p.name.split(' ')[0]}</option>`).join('');
+
+  const eventsFeed = buildDossieEventsFeed(schedAdv);
 
   return `
     <div class="panel" style="border:2px solid rgba(200,150,62,0.3);">
@@ -2367,6 +2364,46 @@ function buildDossieForm(d, allPlayers, isEdit) {
             <div style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:3px;color:#888;margin-bottom:6px;">${schedAdv||'ADVERSÁRIO'}</div>
             <input type="number" id="dThem" min="0" value="${d?.them??''}" placeholder="0"
               style="background:transparent;border:none;border-bottom:2px solid #555;color:var(--white);padding:4px;font-family:'Bebas Neue',sans-serif;font-size:52px;text-align:center;width:80px;outline:none;"/>
+          </div>
+        </div>
+
+        <!-- EVENTOS DO JOGO — gols/cartões com minuto -->
+        <div style="margin-bottom:24px;border:1px solid #2a2a2a;background:rgba(0,0,0,0.2);">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid #2a2a2a;">
+            <div style="font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:3px;color:var(--gold);">EVENTOS DO JOGO</div>
+          </div>
+          <!-- Adicionar evento -->
+          <div style="display:grid;grid-template-columns:60px 1fr auto auto auto;gap:8px;align-items:center;padding:10px 14px;border-bottom:1px solid #1a1a1a;">
+            <div>
+              <input type="number" id="evMinute" min="1" max="120" placeholder="0'" value=""
+                style="width:100%;background:var(--mid);border:1px solid #444;color:var(--white);padding:6px;font-family:'Bebas Neue',sans-serif;font-size:18px;text-align:center;outline:none;" title="Minuto do evento"/>
+            </div>
+            <div>
+              <select id="evPlayer" style="width:100%;background:var(--mid);border:1px solid #444;color:var(--white);padding:7px;font-family:'Oswald',sans-serif;font-size:12px;outline:none;">
+                ${pOptsNone}
+              </select>
+            </div>
+            <div style="display:flex;gap:6px;">
+              <button onclick="addDossieEvent('gol')" title="Gol"
+                style="background:var(--red);border:none;color:#fff;width:38px;height:34px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;">⚽</button>
+              <button onclick="addDossieEvent('golAdv')" title="Gol do adversário"
+                style="background:#333;border:1px solid #555;color:#aaa;width:38px;height:34px;cursor:pointer;font-size:12px;font-family:'Oswald',sans-serif;display:flex;align-items:center;justify-content:center;" title="Gol adversário">ADV</button>
+            </div>
+            <div style="display:flex;gap:6px;">
+              <button onclick="addDossieEvent('amarelo')" title="Cartão amarelo"
+                style="background:#e6b800;border:none;color:#000;width:38px;height:34px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;">🟨</button>
+              <button onclick="addDossieEvent('vermelho')" title="Cartão vermelho"
+                style="background:#cc1a1a;border:none;color:#fff;width:38px;height:34px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;">🟥</button>
+            </div>
+            <div>
+              <label style="display:flex;align-items:center;gap:4px;font-family:'Oswald',sans-serif;font-size:11px;color:var(--red-light);cursor:pointer;white-space:nowrap;">
+                <input type="checkbox" id="evGC" style="accent-color:#e74c3c;"> GC
+              </label>
+            </div>
+          </div>
+          <!-- Feed de eventos -->
+          <div id="dossieEventsFeed" style="min-height:40px;padding:8px 0;">
+            ${eventsFeed}
           </div>
         </div>
 
@@ -2401,8 +2438,7 @@ function buildDossieForm(d, allPlayers, isEdit) {
                   return `<div style="display:flex;align-items:center;gap:0;padding:4px 2px;border-bottom:1px solid #1a1a1a;">
                     <label style="display:flex;align-items:center;gap:5px;font-family:'Oswald',sans-serif;font-size:12px;color:var(--cream);cursor:pointer;flex:1;" title="Jogou">
                       <input type="checkbox" id="dp_${p.id}" ${playerIds.includes(p.id)?'checked':''} style="accent-color:var(--red);">
-                      #${p.num} ${p.name.split(' ')[0]}
-                      ${isTitular?'<span style="font-size:9px;color:var(--red-light);">●</span>':''}
+                      #${p.num} ${p.name.split(' ')[0]}${isTitular?'<span style="font-size:9px;color:var(--red-light);">●</span>':''}
                     </label>
                     <label style="display:flex;align-items:center;gap:4px;font-family:'Oswald',sans-serif;font-size:10px;color:var(--gold);cursor:pointer;white-space:nowrap;" title="Ficou no banco">
                       <input type="checkbox" id="db_${p.id}" ${(d?.bench||[]).includes(p.id)?'checked':''} style="accent-color:var(--gold);"> Banco
@@ -2437,6 +2473,58 @@ function buildDossieForm(d, allPlayers, isEdit) {
         <input type="hidden" id="dExistingId" value="${d?.id||''}">
       </div>
     </div>`;
+}
+
+// Renderiza o feed de eventos ordenado por minuto
+function buildDossieEventsFeed(schedAdv) {
+  if (!_dossieEvents.length) {
+    return '<div style="font-family:Oswald,sans-serif;font-size:11px;letter-spacing:2px;color:#444;text-align:center;padding:12px;">Nenhum evento registrado.</div>';
+  }
+  const sorted = [..._dossieEvents].sort((a,b) => (a.minute||0) - (b.minute||0));
+  return sorted.map((ev, idx) => {
+    const icon = ev.type === 'gol' ? '⚽' : ev.type === 'golAdv' ? '⚽' : ev.type === 'amarelo' ? '🟨' : '🟥';
+    const teamColor = ev.type === 'golAdv' ? '#777' : ev.type === 'gol' ? 'var(--white)' : 'var(--cream)';
+    const teamLabel = ev.type === 'golAdv'
+      ? `<span style="color:#666;">${schedAdv||'Adversário'}</span>`
+      : `<span style="color:${ev.type==='gol'?'var(--white)':'var(--cream)'};">${ev.playerName||'—'}${ev.gc?' <span style="font-size:9px;color:var(--red-light);">(GC)</span>':''}</span>`;
+    return `<div style="display:flex;align-items:center;gap:10px;padding:6px 14px;border-bottom:1px solid #1a1a1a;">
+      <span style="font-family:'Bebas Neue',sans-serif;font-size:17px;color:var(--gold);min-width:34px;text-align:right;">${ev.minute||'?'}'</span>
+      <span style="font-size:17px;">${icon}</span>
+      <span style="font-family:'Oswald',sans-serif;font-size:13px;flex:1;">${teamLabel}</span>
+      <button onclick="removeDossieEvent(${idx})" style="background:transparent;border:none;color:#444;cursor:pointer;font-size:14px;padding:2px 6px;" title="Remover">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function addDossieEvent(type) {
+  const minute = parseInt(document.getElementById('evMinute')?.value) || 0;
+  const pid    = parseInt(document.getElementById('evPlayer')?.value) || null;
+  const gc     = document.getElementById('evGC')?.checked || false;
+  const player = pid ? DB.players.find(p => p.id === pid) : null;
+  const playerName = player ? player.name.split(' ')[0] : (type === 'golAdv' ? '' : null);
+
+  if (type !== 'golAdv' && !pid) { showNotif('Selecione o atleta!', true); return; }
+  if (!minute) { showNotif('Informe o minuto!', true); return; }
+
+  _dossieEvents.push({ type, minute, playerId: pid, playerName, gc });
+  // Re-render just the feed
+  const feed = document.getElementById('dossieEventsFeed');
+  const schedAdv = document.querySelector('.panel-title')?.textContent?.split('—')[1]?.split('·')[0]?.trim() || '';
+  if (feed) feed.innerHTML = buildDossieEventsFeed(schedAdv);
+  // Clear inputs
+  if (document.getElementById('evMinute')) document.getElementById('evMinute').value = '';
+  if (document.getElementById('evPlayer')) document.getElementById('evPlayer').value = '';
+  if (document.getElementById('evGC')) document.getElementById('evGC').checked = false;
+}
+
+function removeDossieEvent(idx) {
+  const sorted = [..._dossieEvents].sort((a,b)=>(a.minute||0)-(b.minute||0));
+  const ev = sorted[idx];
+  const realIdx = _dossieEvents.findIndex(e => e === ev);
+  if (realIdx >= 0) _dossieEvents.splice(realIdx, 1);
+  const feed = document.getElementById('dossieEventsFeed');
+  const schedAdv = document.querySelector('.panel-title')?.textContent?.split('—')[1]?.split('·')[0]?.trim() || '';
+  if (feed) feed.innerHTML = buildDossieEventsFeed(schedAdv);
 }
 
 function closeDossieForm() {
@@ -2519,12 +2607,25 @@ function saveDossie(schedDate, schedAdv) {
   if (isNew) {
     playerIds.forEach(pid => { const p=allP.find(x=>x.id==pid); if(p) p.games++; });
     scorers.forEach(sc => {
-      if (!sc.gc) { // gols contra NÃO contam nas stats do atleta
-        const p=allP.find(x=>x.id==sc.id); if(p) p.goals+=sc.qty;
-      }
+      if (!sc.gc) { const p=allP.find(x=>x.id==sc.id); if(p) p.goals+=sc.qty; }
     });
     assists.forEach(pid => { const p=allP.find(x=>x.id==pid); if(p) p.assists++; });
     if (mvp) { const p=allP.find(x=>x.id==mvp); if(p) p.mvpPts+=5; }
+
+    // Aplicar cartões dos eventos aos atletas
+    _dossieEvents.forEach(ev => {
+      if (ev.type === 'amarelo' && ev.playerId) {
+        const p = allP.find(x=>x.id==ev.playerId);
+        if (p) {
+          p.yellowCards = (p.yellowCards||0)+1;
+          if (p.yellowCards >= 3 && !p.suspended) { p.suspended = true; showNotif('⚠️ ' + p.name.split(' ')[0] + ' — 3 amarelos → SUSPENSO!', true); }
+        }
+      }
+      if (ev.type === 'vermelho' && ev.playerId) {
+        const p = allP.find(x=>x.id==ev.playerId);
+        if (p) { p.redCards = (p.redCards||0)+1; p.suspended = true; }
+      }
+    });
   }
 
   const entry = {
@@ -2533,7 +2634,8 @@ function saveDossie(schedDate, schedAdv) {
     scheduleAdv:  schedAdv,
     date:         schedDate,
     adversary:    schedAdv,
-    us, them, formation, posSlots, playerIds, bench, scorers, assists, mvp, obs
+    us, them, formation, posSlots, playerIds, bench, scorers, assists, mvp, obs,
+    events: [..._dossieEvents]
   };
 
   if (!DB.dossies) DB.dossies = [];
@@ -2544,7 +2646,7 @@ function saveDossie(schedDate, schedAdv) {
     if (idx >= 0) DB.dossies[idx] = entry;
   }
 
-  // Atualiza ou cria resultado público (aparece no site e histórico)
+  // Atualiza resultado público
   const scorerText = scorers.map(sc => {
     const p = allP.find(x=>x.id==sc.id);
     return p ? `${p.name.split(' ')[0]} (${sc.qty}${sc.gc?' GC':''})` : '';
@@ -2557,7 +2659,6 @@ function saveDossie(schedDate, schedAdv) {
   const ri = DB.results.findIndex(x => x.id === entry.id);
   if (ri >= 0) DB.results[ri] = resultEntry;
   else DB.results.unshift(resultEntry);
-  // Ordena resultados por data desc
   DB.results.sort((a,b) => {
     const toD = s => { try{ const [d,m,y]=s.split('/'); return new Date(+y,+m-1,+d); }catch(e){return 0;} };
     return toD(b.date) - toD(a.date);
@@ -2566,12 +2667,17 @@ function saveDossie(schedDate, schedAdv) {
   sbSaveDossie(entry);
   sbSaveResult(resultEntry);
   if (isNew) sbSavePlayers(playerIds);
+  if (_dossieEvents.some(ev => ev.type === 'amarelo' || ev.type === 'vermelho')) {
+    const affectedIds = [...new Set(_dossieEvents.filter(ev=>ev.playerId).map(ev=>ev.playerId))];
+    sbSavePlayers(affectedIds);
+  }
 
+  _dossieEvents = [];
   closeDossieForm();
   renderPane('sumula');
   renderPublicSite();
   _dossiePosSlots = {};
-  showNotif(`✅ Súmula salvo! ${schedAdv} ${us}×${them}`);
+  showNotif(`✅ Súmula salva! ${schedAdv} ${us}×${them}`);
 }
 
 function editDossie(id) {
@@ -3142,231 +3248,6 @@ function publicarConvocacao() {
 }
 
 // ─── PLACAR AO VIVO ───
-function renderPlacarAoVivo(el) {
-  const u = currentUser;
-  const isManager = u.role === 'admin' || u.role === 'diretoria';
-  const ls = DB.liveScore || { active:false, us:0, them:0, adversary:'', time:0, events:[] };
-  const ng = getNextGame();
-
-  if (!isManager) {
-    // Visão do atleta: apenas ver o placar ao vivo
-    el.innerHTML = buildLiveScoreView(ls, ng);
-    return;
-  }
-
-  const allPlayers = [...DB.players].filter(p=>p.role!=='admin').sort((a,b)=>a.name.localeCompare(b.name,'pt'));
-  const pOpts = '<option value="">— Atleta —</option>' + allPlayers.map(p=>`<option value="${p.id}">#${p.num} ${p.name.split(' ')[0]}</option>`).join('');
-
-  el.innerHTML = `
-    <div style="display:grid;gap:20px;">
-
-      <!-- Painel de controle -->
-      <div class="panel" style="border:2px solid ${ls.active?'rgba(46,204,113,0.4)':'#2a2a2a'};">
-        <div class="panel-header" style="background:${ls.active?'rgba(46,204,113,0.08)':''};">
-          <span class="panel-title">⚡ CONTROLE DO PLACAR AO VIVO</span>
-          <span class="badge" style="background:${ls.active?'var(--green)':'#444'};color:#fff;">${ls.active?'🔴 AO VIVO':'⬛ INATIVO'}</span>
-        </div>
-        <div class="panel-body">
-          <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
-            <button class="btn ${ls.active?'btn-secondary':'btn-primary'}" onclick="toggleLiveScore()">
-              ${ls.active?'⬛ ENCERRAR TRANSMISSÃO':'🔴 INICIAR TRANSMISSÃO'}
-            </button>
-            ${ls.active ? '<button class="btn btn-secondary" onclick="resetLiveScore()">🔄 RESET PLACAR</button>' : ''}
-          </div>
-
-          <!-- Placar grande -->
-          <div style="display:flex;align-items:center;justify-content:center;gap:20px;padding:24px;background:var(--mid);border:1px solid #333;margin-bottom:20px;">
-            <div style="text-align:center;">
-              <div style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:3px;color:var(--gold);margin-bottom:8px;">VIRA COPO FC</div>
-              <div style="display:flex;align-items:center;gap:8px;">
-                <button onclick="adjustScore('us',-1)" style="background:var(--dark);border:1px solid #444;color:var(--white);width:36px;height:36px;cursor:pointer;font-size:20px;line-height:1;">−</button>
-                <div style="font-family:'Bebas Neue',sans-serif;font-size:72px;color:var(--white);min-width:72px;text-align:center;line-height:1;">${ls.us}</div>
-                <button onclick="adjustScore('us',1)" style="background:var(--red);border:none;color:#fff;width:36px;height:36px;cursor:pointer;font-size:20px;line-height:1;">+</button>
-              </div>
-            </div>
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:48px;color:#444;">×</div>
-            <div style="text-align:center;">
-              <div style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:3px;color:#888;margin-bottom:8px;">${ls.adversary||ng?.adversary||'ADVERSÁRIO'}</div>
-              <div style="display:flex;align-items:center;gap:8px;">
-                <button onclick="adjustScore('them',-1)" style="background:var(--dark);border:1px solid #444;color:var(--white);width:36px;height:36px;cursor:pointer;font-size:20px;line-height:1;">−</button>
-                <div style="font-family:'Bebas Neue',sans-serif;font-size:72px;color:#aaa;min-width:72px;text-align:center;line-height:1;">${ls.them}</div>
-                <button onclick="adjustScore('them',1)" style="background:#444;border:none;color:#fff;width:36px;height:36px;cursor:pointer;font-size:20px;line-height:1;">+</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Tempo de jogo -->
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
-            <div style="font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:2px;color:#666;">TEMPO:</div>
-            <div style="display:flex;gap:6px;">
-              ${[1,10,15,30,45,60,75,90].map(t=>`<button onclick="setGameTime(${t})" style="background:${ls.time===t?'var(--red)':'var(--mid)'};border:1px solid ${ls.time===t?'var(--red)':'#444'};color:var(--white);padding:4px 10px;cursor:pointer;font-family:'Oswald',sans-serif;font-size:12px;">${t}'</button>`).join('')}
-              <input type="number" id="customTime" min="1" max="120" placeholder="##" style="width:52px;background:var(--mid);border:1px solid #444;color:var(--white);padding:4px 8px;font-family:'Oswald',sans-serif;font-size:12px;text-align:center;outline:none;">
-              <button onclick="setGameTime(parseInt(document.getElementById('customTime').value)||0)" style="background:var(--mid);border:1px solid #444;color:var(--gold);padding:4px 10px;cursor:pointer;font-family:'Oswald',sans-serif;font-size:11px;">OK</button>
-            </div>
-          </div>
-
-          <!-- Registrar evento -->
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-            <div>
-              <div class="section-label" style="margin-bottom:8px;">⚽ REGISTRAR GOL (VCFC)</div>
-              <div style="display:flex;gap:6px;">
-                <select id="liveGoalPlayer" style="flex:1;background:var(--mid);border:1px solid #444;color:var(--white);padding:7px 8px;font-family:'Oswald',sans-serif;font-size:12px;outline:none;">${pOpts}</select>
-                <button onclick="addLiveEvent('gol')" style="background:var(--red);border:none;color:#fff;padding:7px 14px;cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:16px;">⚽ GOL!</button>
-              </div>
-              <label style="display:flex;align-items:center;gap:6px;margin-top:6px;font-family:'Oswald',sans-serif;font-size:11px;color:var(--red-light);cursor:pointer;">
-                <input type="checkbox" id="liveGC" style="accent-color:#e74c3c;"> Gol contra
-              </label>
-            </div>
-            <div>
-              <div class="section-label" style="margin-bottom:8px;">🟨🟥 CARTÃO</div>
-              <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                <select id="liveCardPlayer" style="flex:1;min-width:120px;background:var(--mid);border:1px solid #444;color:var(--white);padding:7px 8px;font-family:'Oswald',sans-serif;font-size:12px;outline:none;">${pOpts}</select>
-                <button onclick="addLiveEvent('amarelo')" style="background:#e6b800;border:none;color:#000;padding:7px 12px;cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:15px;">🟨</button>
-                <button onclick="addLiveEvent('vermelho')" style="background:var(--red);border:none;color:#fff;padding:7px 12px;cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:15px;">🟥</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Feed de eventos -->
-      ${ls.events && ls.events.length ? `
-      <div class="panel">
-        <div class="panel-header">
-          <span class="panel-title">📋 EVENTOS DO JOGO</span>
-          <button onclick="clearLiveEvents()" style="background:transparent;border:1px solid #444;color:#888;padding:4px 10px;cursor:pointer;font-family:'Oswald',sans-serif;font-size:11px;">🗑 LIMPAR</button>
-        </div>
-        <div class="panel-body">
-          ${[...ls.events].reverse().map(ev=>`
-            <div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid #1e1e1e;">
-              <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--gold);min-width:36px;">${ev.time}'</div>
-              <div style="font-size:20px;">${ev.type==='gol'?'⚽':ev.type==='amarelo'?'🟨':ev.type==='vermelho'?'🟥':'📌'}</div>
-              <div style="font-family:'Oswald',sans-serif;font-size:13px;color:var(--white);">
-                ${ev.playerName||'—'}
-                ${ev.gc?'<span style="font-size:10px;color:var(--red-light);margin-left:4px;">(GC)</span>':''}
-              </div>
-            </div>`).join('')}
-        </div>
-      </div>` : ''}
-    </div>`;
-}
-
-function buildLiveScoreView(ls, ng) {
-  if (!ls.active) return `
-    <div class="panel">
-      <div class="panel-header"><span class="panel-title">⚡ PLACAR AO VIVO</span></div>
-      <div class="panel-body" style="text-align:center;padding:40px;">
-        <div style="font-size:48px;margin-bottom:12px;">⬛</div>
-        <div style="font-family:'Oswald',sans-serif;font-size:13px;letter-spacing:2px;color:#555;">Nenhuma transmissão ativa no momento.</div>
-      </div>
-    </div>`;
-  return `
-    <div class="panel" style="border:2px solid rgba(46,204,113,0.4);">
-      <div class="panel-header" style="background:rgba(46,204,113,0.08);">
-        <span class="panel-title">⚡ PLACAR AO VIVO</span>
-        <span class="badge" style="background:var(--green);color:#fff;animation:pulse 1s infinite;">🔴 AO VIVO · ${ls.time||0}'</span>
-      </div>
-      <div class="panel-body">
-        <div style="display:flex;align-items:center;justify-content:center;gap:24px;padding:30px;background:var(--mid);border:1px solid #333;margin-bottom:20px;">
-          <div style="text-align:center;"><div style="font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:3px;color:var(--gold);margin-bottom:8px;">VIRA COPO FC</div>
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:88px;color:var(--white);line-height:1;">${ls.us}</div></div>
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:52px;color:#444;">×</div>
-          <div style="text-align:center;"><div style="font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:3px;color:#888;margin-bottom:8px;">${ls.adversary||ng?.adversary||'ADVERSÁRIO'}</div>
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:88px;color:#aaa;line-height:1;">${ls.them}</div></div>
-        </div>
-        ${(()=>{
-          if (!ls.events || !ls.events.length) return '';
-          return '<div class="section-label" style="margin-bottom:10px;">EVENTOS</div>' +
-            [...ls.events].reverse().slice(0,8).map(ev =>
-              '<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #1e1e1e;">' +
-              '<span style="font-family:Bebas Neue,sans-serif;color:var(--gold);min-width:32px;">' + ev.time + "'" + '</span>' +
-              '<span style="font-size:16px;">' + (ev.type==='gol'?'⚽':ev.type==='amarelo'?'🟨':'🟥') + '</span>' +
-              '<span style="font-family:Oswald,sans-serif;font-size:12px;">' + (ev.playerName||'—') + (ev.gc?' (GC)':'') + '</span>' +
-              '</div>').join('');
-        })()}
-      </div>
-    </div>`;
-}
-
-function toggleLiveScore() {
-  if (!DB.liveScore) DB.liveScore = { active:false, us:0, them:0, adversary:'', time:0, events:[] };
-  if (DB.liveScore.active) {
-    DB.liveScore.active = false;
-    showNotif('Transmissão encerrada.');
-  } else {
-    const ng = getNextGame();
-    DB.liveScore.active = true;
-    DB.liveScore.adversary = ng?.adversary || '';
-    DB.liveScore.us = 0; DB.liveScore.them = 0; DB.liveScore.time = 0; DB.liveScore.events = [];
-    showNotif('🔴 Transmissão ao vivo iniciada!');
-  }
-  sbSaveConfig('live_score');
-  renderPane('placar');
-  renderPublicSite();
-}
-
-function adjustScore(side, delta) {
-  if (!DB.liveScore) DB.liveScore = { active:false, us:0, them:0, adversary:'', time:0, events:[] };
-  DB.liveScore[side] = Math.max(0, (DB.liveScore[side]||0) + delta);
-  sbSaveConfig('live_score');
-  renderPane('placar');
-  renderPublicSite();
-}
-
-function setGameTime(t) {
-  if (!DB.liveScore || !t) return;
-  DB.liveScore.time = t;
-  sbSaveConfig('live_score');
-  renderPane('placar');
-}
-
-function addLiveEvent(type) {
-  if (!DB.liveScore) return;
-  const isGoal  = type === 'gol';
-  const isCard  = type === 'amarelo' || type === 'vermelho';
-  const pid = parseInt(document.getElementById(isGoal?'liveGoalPlayer':'liveCardPlayer')?.value);
-  const gc  = isGoal && document.getElementById('liveGC')?.checked;
-  const player = pid ? DB.players.find(p=>p.id===pid) : null;
-
-  if (isGoal) {
-    if (!gc) DB.liveScore.us = (DB.liveScore.us||0)+1;
-    else DB.liveScore.them = (DB.liveScore.them||0)+1;
-    if (player && !gc) player.goals++;
-  }
-  if (isCard) {
-    if (player) {
-      if (type==='amarelo') {
-        player.yellowCards = (player.yellowCards||0)+1;
-        if (player.yellowCards >= 3 && !player.suspended) { player.suspended = true; showNotif('⚠️ ' + player.name.split(' ')[0] + ' acumulou 3 amarelos — SUSPENSO!', true); }
-        else showNotif('🟨 ' + player.name.split(' ')[0] + ' — amarelo ' + player.yellowCards + '/3');
-      }
-      if (type==='vermelho') { player.redCards = (player.redCards||0)+1; player.suspended = true; showNotif('🟥 ' + player.name.split(' ')[0] + ' EXPULSO — suspenso!', true); }
-      sbSavePlayers([pid]);
-    }
-  }
-
-  if (!DB.liveScore.events) DB.liveScore.events = [];
-  DB.liveScore.events.push({ type, time: DB.liveScore.time||0, playerId: pid||null, playerName: player?.name?.split(' ')[0]||'—', gc });
-  sbSaveConfig('live_score');
-  renderPane('placar');
-  renderPublicSite();
-}
-
-function resetLiveScore() {
-  if (!DB.liveScore) return;
-  DB.liveScore.us = 0; DB.liveScore.them = 0; DB.liveScore.time = 0; DB.liveScore.events = [];
-  sbSaveConfig('live_score');
-  renderPane('placar');
-  renderPublicSite();
-}
-
-function clearLiveEvents() {
-  if (!DB.liveScore) return;
-  DB.liveScore.events = [];
-  sbSaveConfig('live_score');
-  renderPane('placar');
-}
-
 // ─── CARTÕES / SUSPENSÕES (no elenco do admin) ───
 function toggleSuspensao(pid) {
   const p = DB.players.find(x=>x.id===pid);
