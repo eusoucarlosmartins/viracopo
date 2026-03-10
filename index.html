@@ -809,6 +809,7 @@ input, select, textarea, button { -webkit-tap-highlight-color: transparent; }
       <button class="btn-logout" onclick="doLogout()">Sair</button>
       <button class="btn btn-secondary btn-sm" onclick="showView('site')">← Ver Site</button>
       <button id="btnSeedDB" class="btn btn-sm" style="background:rgba(63,178,104,0.15);color:#3fb268;border:1px solid rgba(63,178,104,0.3);font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:2px;display:none;" onclick="sbSeedAll()" title="Envia os dados padrão para o Supabase (use apenas na primeira vez)">☁ SEED DB</button>
+      <button id="btnDedup" class="btn btn-sm" style="background:rgba(200,150,62,0.1);color:var(--gold);border:1px solid rgba(200,150,62,0.3);font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:2px;display:none;" onclick="sbDeduplicateResults()" title="Remove resultados duplicados do banco">🧹 DEDUP</button>
       <span id="localModeTag" style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:2px;color:#555;display:none;" title="Configure SUPABASE_URL e SUPABASE_KEY no código">⚫ LOCAL</span>
     </div>
   </div>
@@ -918,11 +919,18 @@ async function sbLoad() {
 
     // ── results ──────────────────────────────────────────
     if (results.length) {
-      DB.results = results.map(r => ({
+      const mapped = results.map(r => ({
         id: r.id, adversary: r.adversary, score_us: r.score_us,
         score_them: r.score_them, date: r.date,
         scorers: r.scorers || [], assists: r.assists || []
       }));
+      // Deduplicar por date+adversary — mantém o de maior id (mais recente)
+      const seen = new Map();
+      mapped.forEach(r => {
+        const key = r.date + '|' + (r.adversary||'');
+        if (!seen.has(key) || r.id > seen.get(key).id) seen.set(key, r);
+      });
+      DB.results = [...seen.values()].sort((a,b) => b.id - a.id);
     }
 
     // ── sumulas ──────────────────────────────────────────
@@ -1069,6 +1077,27 @@ async function sbSaveResult(result) {
     score_them: result.score_them, date: result.date,
     scorers: result.scorers, assists: result.assists
   }]);
+}
+async function sbDeleteResult(id) {
+  if (!SB_READY) return;
+  await sbDelete('results', `id=eq.${id}`);
+}
+// Remove duplicatas de results no Supabase — mantém o de maior id por date+adversary
+async function sbDeduplicateResults() {
+  if (!SB_READY) return;
+  const all = await sbGet('results', '?order=id.asc');
+  const seen = new Map();
+  const toDelete = [];
+  all.forEach(r => {
+    const key = r.date + '|' + (r.adversary||'');
+    if (seen.has(key)) toDelete.push(r.id); // duplicata — deleta o mais antigo
+    else seen.set(key, r.id);
+  });
+  if (!toDelete.length) { showNotif('Sem duplicatas encontradas ✓'); return; }
+  await Promise.all(toDelete.map(id => sbDeleteResult(id)));
+  showNotif(`🧹 ${toDelete.length} duplicata(s) removida(s) do banco.`);
+  await sbLoad();
+  renderPublicSite();
 }
 async function sbSaveSumula(s) {
   if (!SB_READY) return;
@@ -1571,6 +1600,8 @@ function buildAdminPanel() {
   const seedBtn = document.getElementById('btnSeedDB');
   const localTag = document.getElementById('localModeTag');
   if (seedBtn) seedBtn.style.display = SB_READY ? 'inline-flex' : 'none';
+  const dedupBtn = document.getElementById('btnDedup');
+  if (dedupBtn) dedupBtn.style.display = SB_READY ? 'inline-flex' : 'none';
   if (localTag) localTag.style.display = SB_READY ? 'none' : 'inline';
 
   // Define tabs by role
