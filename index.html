@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Vira Copo FC — Portal Oficial</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@300;400;600;700&family=Barlow+Condensed:ital,wght@0,400;0,600;1,400&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -199,7 +199,7 @@ body { background: var(--black); color: var(--white); font-family: 'Barlow', san
   background:rgba(0,0,0,0.92); backdrop-filter:blur(8px);
   align-items:center; justify-content:center;
 }
-.login-overlay.open { display:flex; }
+.login-overlay.open { display:flex; padding:16px; align-items:center; }
 .login-box {
   background:var(--dark); border:1px solid #333; border-top:3px solid var(--red);
   width:100%; max-width:380px; padding:40px 36px;
@@ -240,7 +240,7 @@ body { background: var(--black); color: var(--white); font-family: 'Barlow', san
 .btn-logout { background:transparent; border:1px solid #444; color:#888; font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:2px; padding:8px 14px; cursor:pointer; transition:all .2s; text-transform:uppercase; }
 .btn-logout:hover { border-color:var(--red); color:var(--red); }
 
-.admin-tabs { display:flex; gap:0; border-bottom:1px solid #2a2a2a; overflow-x:auto; padding: 0 28px; }
+.admin-tabs { display:flex; gap:0; border-bottom:1px solid #2a2a2a; overflow-x:auto;-webkit-overflow-scrolling:touch; padding: 0 28px; }
 .admin-tab {
   font-family:'Oswald',sans-serif; font-size:12px; letter-spacing:2px; text-transform:uppercase;
   color:#666; padding:14px 20px; cursor:pointer; border-bottom:2px solid transparent;
@@ -359,7 +359,7 @@ body { background: var(--black); color: var(--white); font-family: 'Barlow', san
 /* ── MODAL ── */
 .modal-overlay { display:none; position:fixed; inset:0; z-index:300; background:rgba(0,0,0,0.85); align-items:center; justify-content:center; }
 .modal-overlay.open { display:flex; }
-.modal-box { background:var(--dark); border:1px solid #333; border-top:3px solid var(--gold); width:100%; max-width:480px; padding:32px; position:relative; }
+.modal-box { background:var(--dark); border:1px solid #333; border-top:3px solid var(--gold); width:100%; max-width:480px; padding:32px; position:relative; margin:0 8px; }
 .modal-box h3 { font-family:'Bebas Neue',sans-serif; font-size:28px; color:var(--white); margin-bottom:20px; letter-spacing:2px; }
 .modal-close { position:absolute; top:14px; right:18px; background:none; border:none; color:#666; font-size:22px; cursor:pointer; }
 .modal-close:hover { color:var(--white); }
@@ -383,11 +383,171 @@ body { background: var(--black); color: var(--white); font-family: 'Barlow', san
 .sponsor-slot .slot-icon { font-size:24px; color:#444; }
 .badge-guest { background:rgba(200,150,62,0.2); color:var(--gold-light); border:1px solid rgba(200,150,62,0.4); }
 
-/* ── RESPONSIVE ── */
+/* ══════════════════════════════════════════════
+   MOBILE — iPhone XR e similares (≤ 480px)
+   + Tablet ajustes (≤ 768px)
+   ══════════════════════════════════════════════ */
+
+/* Scrollbar fina nos containers overflow */
+::-webkit-scrollbar { width:4px; height:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:#444; border-radius:2px; }
+
+/* Inputs maiores para toque */
+input, select, textarea, button { -webkit-tap-highlight-color: transparent; }
+.form-group input, .form-group select, .form-group textarea { font-size:16px; } /* evita zoom no iOS */
+
 @media(max-width:768px) {
   .nav-links { display:none; }
-  .admin-header { flex-direction:column; align-items:flex-start; }
+  .admin-header { flex-direction:column; align-items:flex-start; gap:8px; }
   .sumula-grid { grid-template-columns:1fr; }
+  .admin-content { padding:14px; }
+  .admin-tabs { padding:0 10px; }
+  .admin-tab { padding:12px 14px; font-size:11px; }
+}
+
+@media(max-width:480px) {
+  /* ─ NAV ─ */
+  .top-nav { padding:0 14px; height:52px; }
+  .nav-logo { font-size:18px; }
+  .nav-login-btn { display:none !important; }
+  #navHamburger { display:block !important; }
+  .uniform-banner { top:52px; font-size:14px; letter-spacing:2px; padding:8px 10px; }
+
+  /* ─ HERO ─ */
+  .hero { padding:70px 16px 50px; }
+  .crest { width:110px; height:110px; margin-bottom:16px; }
+  .club-name { font-size:clamp(52px,18vw,80px); }
+  .club-sub { font-size:14px; }
+  .hero-stats { gap:16px; }
+  .stat-number { font-size:clamp(28px,9vw,48px); }
+  .stat-label { font-size:9px; letter-spacing:2px; }
+  .scroll-hint { display:none; }
+
+  /* ─ SECTIONS ─ */
+  .site-section { padding:44px 16px; }
+  .section-title { font-size:clamp(34px,12vw,60px); margin-bottom:24px; }
+
+  /* ─ PRÓXIMO JOGO ─ */
+  .match-card { padding:20px 16px; }
+  .match-team { font-size:clamp(18px,6vw,26px); }
+  .match-info { gap:14px; }
+  .match-info-item { font-size:12px; }
+  .whatsapp-btn { font-size:13px; padding:10px 20px; width:100%; justify-content:center; }
+
+  /* ─ RESULTADOS ─ */
+  .results-grid { grid-template-columns:1fr; gap:12px; }
+
+  /* ─ HOF ─ */
+  .hof-grid { grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; }
+  .hof-card { padding:18px 12px; }
+
+  /* ─ ELENCO ─ */
+  .squad-grid { grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:10px; }
+
+  /* ─ LOGIN ─ */
+  .login-box { padding:28px 20px; margin:16px; }
+  .login-logo { font-size:26px; }
+
+  /* ─ ADMIN HEADER ─ */
+  .admin-view { padding-top:52px; }
+  .admin-header { padding:12px 14px; }
+  .admin-header-left h2 { font-size:22px; }
+  .admin-header-left span { font-size:10px; letter-spacing:2px; }
+  .user-badge { padding:6px 10px; gap:6px; }
+  .user-badge span { font-size:11px; }
+  .btn-logout { padding:6px 10px; font-size:10px; }
+
+  /* ─ ADMIN TABS — scroll horizontal, sem cortar ─ */
+  .admin-tabs { padding:0 6px; gap:0; -webkit-overflow-scrolling:touch; }
+  .admin-tab { padding:11px 12px; font-size:10px; letter-spacing:1px; }
+
+  /* ─ ADMIN CONTENT ─ */
+  .admin-content { padding:12px; }
+
+  /* ─ PANELS ─ */
+  .panel { margin-bottom:14px; }
+  .panel-header { padding:11px 14px; }
+  .panel-title { font-size:16px; letter-spacing:1px; }
+  .panel-body { padding:14px; }
+
+  /* ─ TABELAS — scroll horizontal ─ */
+  .data-table { font-size:12px; }
+  .data-table th { padding:8px 8px; font-size:10px; letter-spacing:2px; }
+  .data-table td { padding:8px 8px; }
+  .data-table .num { font-size:18px; }
+
+  /* ─ BUTTONS ─ */
+  .btn { padding:10px 16px; font-size:11px; letter-spacing:1px; }
+  .btn-sm { padding:7px 12px; font-size:10px; }
+
+  /* ─ STATS GRID ─ */
+  .stats-grid { grid-template-columns:repeat(2,1fr); gap:10px; }
+  .stat-box { padding:14px 10px; }
+  .stat-box-num { font-size:36px; }
+  .stat-box-label { font-size:10px; letter-spacing:2px; }
+
+  /* ─ CHECK-IN ─ */
+  .checkin-card { padding:18px 14px; }
+  .checkin-game-info h3 { font-size:22px; }
+  .checkin-btns { flex-direction:column; gap:8px; }
+  .checkin-btns .btn { width:100%; justify-content:center; font-size:14px; padding:14px; }
+
+  /* ─ PRESENÇA ─ */
+  .presence-list { grid-template-columns:1fr 1fr; gap:8px; }
+  .presence-item { padding:10px 10px; gap:8px; }
+  .presence-name { font-size:11px; }
+  .presence-icon { font-size:14px; }
+
+  /* ─ VOTAÇÃO ─ */
+  .voting-card { padding:16px 14px; }
+  .vote-player { gap:10px; padding:8px 0; }
+  .vote-avatar { width:34px; height:34px; font-size:13px; }
+  .vote-name { font-size:13px; }
+  .vote-select { padding:8px 6px; font-size:12px; }
+
+  /* ─ FINANCEIRO ─ */
+  .fin-row { flex-wrap:wrap; gap:4px; padding:8px 0; }
+  .fin-name { font-size:13px; }
+
+  /* ─ MODAL ─ */
+  .modal-box { padding:20px 16px; margin:12px; }
+  .modal-box h3 { font-size:22px; }
+
+  /* ─ NOTIF ─ */
+  .notif { bottom:14px; right:10px; left:10px; max-width:100%; font-size:12px; padding:12px 14px; }
+
+  /* ─ PATROCINADORES ─ */
+  .sponsors-grid { gap:12px; }
+  .sponsor-slot { width:120px; height:80px; }
+
+  /* ─ SUMULA — eventos ─ */
+  .sumula-grid { grid-template-columns:1fr; }
+}
+
+/* ─ Utilitários responsivos usados em JS ─ */
+.grid-2col { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.grid-2col-sm { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.grid-3col-sm { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+.grid-auto-fit { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:20px; }
+.grid-events { display:grid; grid-template-columns:60px 1fr auto auto auto; gap:8px; align-items:center; }
+.grid-field-players { display:grid; grid-template-columns:auto 1fr; gap:20px; align-items:start; }
+.grid-mvp-obs { display:grid; grid-template-columns:1fr 2fr; gap:12px; }
+
+@media(max-width:480px) {
+  .grid-2col { grid-template-columns:1fr; gap:12px; }
+  .grid-2col-sm { grid-template-columns:1fr 1fr; gap:8px; }
+  .grid-3col-sm { grid-template-columns:1fr 1fr; gap:8px; }
+  .grid-auto-fit { grid-template-columns:1fr; gap:12px; }
+  .grid-events { grid-template-columns:48px 1fr; gap:6px; }
+  .grid-events .ev-btns-gol,
+  .grid-events .ev-btns-card { display:flex; gap:4px; }
+  .grid-events .ev-gc { grid-column:2; }
+  .grid-field-players { grid-template-columns:1fr; }
+  .grid-mvp-obs { grid-template-columns:1fr; gap:10px; }
+  .hide-mobile { display:none !important; }
+  .full-mobile { width:100% !important; justify-content:center; }
+  .p-mobile { padding:10px !important; }
 }
 </style>
 </head>
@@ -406,10 +566,25 @@ body { background: var(--black); color: var(--white); font-family: 'Barlow', san
     <a onclick="scrollToSection('agenda')">Agenda</a>
     <a onclick="scrollToSection('historia')">História</a>
   </div>
-  <div style="display:flex;gap:10px;align-items:center;">
+  <div style="display:flex;gap:8px;align-items:center;">
     <button class="nav-login-btn" id="navLoginBtn" onclick="toggleLogin()">Área do Atleta</button>
+    <button id="navHamburger" onclick="toggleMobileMenu()" style="display:none;background:transparent;border:none;color:var(--cream);font-size:22px;cursor:pointer;padding:4px 6px;line-height:1;">☰</button>
   </div>
 </nav>
+
+<!-- ── MOBILE MENU OVERLAY ── -->
+<div id="mobileMenuOverlay" style="display:none;position:fixed;inset:0;z-index:150;background:rgba(0,0,0,0.95);">
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:8px;">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--red);letter-spacing:3px;margin-bottom:20px;">VIRA COPO FC</div>
+    <a onclick="scrollToSection('proxjogo');toggleMobileMenu()" style="font-family:'Oswald',sans-serif;font-size:18px;letter-spacing:3px;color:var(--cream);text-decoration:none;padding:14px 32px;border-bottom:1px solid #222;width:220px;text-align:center;">PRÓXIMO JOGO</a>
+    <a onclick="scrollToSection('resultados');toggleMobileMenu()" style="font-family:'Oswald',sans-serif;font-size:18px;letter-spacing:3px;color:var(--cream);text-decoration:none;padding:14px 32px;border-bottom:1px solid #222;width:220px;text-align:center;">RESULTADOS</a>
+    <a onclick="scrollToSection('elenco');toggleMobileMenu()" style="font-family:'Oswald',sans-serif;font-size:18px;letter-spacing:3px;color:var(--cream);text-decoration:none;padding:14px 32px;border-bottom:1px solid #222;width:220px;text-align:center;">ELENCO</a>
+    <a onclick="scrollToSection('agenda');toggleMobileMenu()" style="font-family:'Oswald',sans-serif;font-size:18px;letter-spacing:3px;color:var(--cream);text-decoration:none;padding:14px 32px;border-bottom:1px solid #222;width:220px;text-align:center;">AGENDA</a>
+    <a onclick="scrollToSection('historia');toggleMobileMenu()" style="font-family:'Oswald',sans-serif;font-size:18px;letter-spacing:3px;color:var(--cream);text-decoration:none;padding:14px 32px;border-bottom:1px solid #222;width:220px;text-align:center;">HISTÓRIA</a>
+    <button onclick="toggleMobileMenu();toggleLogin()" style="margin-top:20px;background:var(--red);border:none;color:#fff;font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:3px;padding:14px 32px;cursor:pointer;width:220px;">ÁREA DO ATLETA</button>
+    <button onclick="toggleMobileMenu()" style="margin-top:12px;background:transparent;border:1px solid #444;color:#666;font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:2px;padding:10px 20px;cursor:pointer;">✕ FECHAR</button>
+  </div>
+</div>
 
 <!-- ── LOGIN OVERLAY ── -->
 <div class="login-overlay" id="loginOverlay">
@@ -653,20 +828,35 @@ async function sbLoad() {
   try {
     showLoadingOverlay(true);
 
-    // players
-    const players = await sbGet('players', '?order=id');
+    // ── Dispara TODAS as requests em paralelo ──────────────
+    const [players, schedule, results, sumulas, checkins, votes, lineup, cfg, dossiesRaw] =
+      await Promise.all([
+        sbGet('players',  '?order=id'),
+        sbGet('schedule', '?order=season,game_date'),
+        sbGet('results',  '?order=created_at.desc&limit=20'),
+        sbGet('sumulas',  '?order=created_at.desc'),
+        sbGet('checkins', ''),
+        sbGet('votes',    ''),
+        sbGet('lineup',   '?id=eq.1'),
+        sbGet('config',   ''),
+        sbGet('dossies',  '?order=id.desc').catch(() => []),  // tabela opcional
+      ]);
+
+    // ── players ──────────────────────────────────────────
     if (players.length) {
       DB.players = players.map(p => ({
         id: p.id, name: p.name, pos: p.pos, num: p.num,
         games: p.games, goals: p.goals, assists: p.assists,
         attendance: p.attendance, mvpPts: p.mvp_pts,
         paid: p.paid, role: p.role, user: p.username, pass: p.pass,
-        trophies: p.trophies || [], monthlyPayments: p.monthly_payments || {}
+        trophies: p.trophies || [], monthlyPayments: p.monthly_payments || {},
+        yellowCards: p.yellow_cards || 0, redCards: p.red_cards || 0,
+        suspended: p.suspended || false, suspendNextSeason: p.suspend_next_season || false,
+        photo: p.photo || null
       }));
     }
 
-    // schedule — load all seasons
-    const schedule = await sbGet('schedule', '?order=season,game_date');
+    // ── schedule ─────────────────────────────────────────
     DB.scheduleAll = {};
     schedule.forEach(g => {
       const yr = g.season || 2026;
@@ -678,11 +868,9 @@ async function sbLoad() {
         season: yr, game_date: g.game_date
       });
     });
-    // DB.schedule always points to current 2026 season for backward compat
     DB.schedule = DB.scheduleAll[2026] || DB.schedule;
 
-    // results
-    const results = await sbGet('results', '?order=created_at.desc&limit=20');
+    // ── results ──────────────────────────────────────────
     if (results.length) {
       DB.results = results.map(r => ({
         id: r.id, adversary: r.adversary, score_us: r.score_us,
@@ -691,8 +879,7 @@ async function sbLoad() {
       }));
     }
 
-    // sumulas
-    const sumulas = await sbGet('sumulas', '?order=created_at.desc');
+    // ── sumulas ──────────────────────────────────────────
     if (sumulas.length) {
       DB.sumulas = sumulas.map(s => ({
         id: s.id, adversary: s.adversary, date: s.date,
@@ -700,53 +887,46 @@ async function sbLoad() {
       }));
     }
 
-    // checkins
-    const checkins = await sbGet('checkins', '');
+    // ── checkins ─────────────────────────────────────────
     DB.checkins = {};
     checkins.forEach(c => { DB.checkins[c.player_id] = c.status; });
 
-    // votes
-    const votes = await sbGet('votes', '');
+    // ── votes ────────────────────────────────────────────
     DB.votes = {};
     votes.forEach(v => { DB.votes[v.player_id] = v.choices; });
 
-    // lineup
-    const lineup = await sbGet('lineup', '?id=eq.1');
+    // ── lineup ───────────────────────────────────────────
     if (lineup.length) {
-      DB.lineup.starting      = lineup[0].starting       || [];
-      DB.lineup.bench         = lineup[0].bench          || [];
-      DB.lineup.formation     = lineup[0].formation      || '4-3-3';
-      DB.lineup.posSlots      = lineup[0].pos_slots      || {};
-      DB.gamePositions        = lineup[0].game_positions || {};
+      DB.lineup.starting  = lineup[0].starting       || [];
+      DB.lineup.bench     = lineup[0].bench          || [];
+      DB.lineup.formation = lineup[0].formation      || '4-3-3';
+      DB.lineup.posSlots  = lineup[0].pos_slots      || {};
+      DB.gamePositions    = lineup[0].game_positions || {};
     }
 
-    // config
-    const cfg = await sbGet('config', '');
+    // ── config ───────────────────────────────────────────
     cfg.forEach(c => {
-      if (c.key === 'uniform')            DB.uniform          = c.value;
-      if (c.key === 'vote_window')        DB.voteWindow       = c.value;
-      if (c.key === 'sponsors')           DB.sponsors         = c.value;
-      if (c.key === 'convocados')         { try { DB.convocados    = JSON.parse(c.value); } catch(e){} }
-      if (c.key === 'caixa')              { try { DB.caixa         = JSON.parse(c.value); } catch(e){} }
-      if (c.key === 'mensalidade_valor')  DB.mensalidadeValor = parseFloat(c.value) || 30;
-      if (c.key === 'elenco_seasons')     { try { const es = JSON.parse(c.value); DB.elencoSeasons = es; DB.seasons = es; } catch(e){} }
+      if (c.key === 'uniform')           DB.uniform          = c.value;
+      if (c.key === 'vote_window')       DB.voteWindow       = c.value;
+      if (c.key === 'sponsors')          DB.sponsors         = c.value;
+      if (c.key === 'convocados')        { try { DB.convocados    = JSON.parse(c.value); } catch(e){} }
+      if (c.key === 'caixa')             { try { DB.caixa         = JSON.parse(c.value); } catch(e){} }
+      if (c.key === 'mensalidade_valor') DB.mensalidadeValor = parseFloat(c.value) || 30;
+      if (c.key === 'elenco_seasons')    { try { const es = JSON.parse(c.value); DB.elencoSeasons = es; DB.seasons = es; } catch(e){} }
     });
 
-    // dossies
-    try {
-      const dossies = await sbGet('dossies', '?order=id.desc');
-      if (dossies.length) {
-        DB.dossies = dossies.map(d => ({
-          id: d.id, date: d.date, adversary: d.adversary,
-          us: d.us, them: d.them, formation: d.formation || '4-3-3',
-          posSlots: d.pos_slots || {}, playerIds: d.player_ids || [],
-          scorers: d.scorers || [], assists: d.assists || [],
-          mvp: d.mvp, obs: d.obs || '',
-          events: d.events || [],
-          scheduleDate: d.date, scheduleAdv: d.adversary
-        }));
-      }
-    } catch(e) { console.warn('Dossies table not yet created — run SQL migration.'); }
+    // ── dossies ──────────────────────────────────────────
+    if (dossiesRaw.length) {
+      DB.dossies = dossiesRaw.map(d => ({
+        id: d.id, date: d.date, adversary: d.adversary,
+        us: d.us, them: d.them, formation: d.formation || '4-3-3',
+        posSlots: d.pos_slots || {}, playerIds: d.player_ids || [],
+        scorers: d.scorers || [], assists: d.assists || [],
+        mvp: d.mvp, obs: d.obs || '',
+        events: d.events || [],
+        scheduleDate: d.date, scheduleAdv: d.adversary
+      }));
+    }
 
     showLoadingOverlay(false);
     renderPublicSite();
@@ -889,18 +1069,33 @@ async function sbSeedAll() {
 
 // ── Loading overlay ───────────────────────────────────────
 function showLoadingOverlay(show) {
-  let el = document.getElementById('sbLoadingOverlay');
+  // Não bloqueia mais a tela — usa um indicador discreto no canto
+  let el = document.getElementById('sbSyncIndicator');
   if (!el) {
     el = document.createElement('div');
-    el.id = 'sbLoadingOverlay';
-    el.style.cssText = 'position:fixed;inset:0;background:rgba(13,13,13,0.92);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;';
+    el.id = 'sbSyncIndicator';
+    el.style.cssText = [
+      'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:9999;',
+      'background:rgba(13,13,13,0.94);border:1px solid #2a2a2a;border-top:2px solid var(--red);',
+      'display:flex;align-items:center;gap:10px;padding:10px 18px;',
+      'font-family:Oswald,sans-serif;font-size:12px;letter-spacing:2px;color:#888;',
+      'transition:opacity .3s,transform .3s;pointer-events:none;white-space:nowrap;',
+    ].join('');
     el.innerHTML = `
-      <div style="width:48px;height:48px;border:3px solid #333;border-top-color:var(--red);border-radius:50%;animation:spin 0.8s linear infinite;"></div>
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:4px;color:var(--gold);">CARREGANDO DADOS...</div>
+      <div style="width:14px;height:14px;border:2px solid #333;border-top-color:var(--red);border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0;"></div>
+      <span>SINCRONIZANDO...</span>
       <style>@keyframes spin{to{transform:rotate(360deg)}}</style>`;
     document.body.appendChild(el);
   }
-  el.style.display = show ? 'flex' : 'none';
+  if (show) {
+    el.style.opacity = '1';
+    el.style.display = 'flex';
+    el.style.transform = 'translateX(-50%) translateY(0)';
+  } else {
+    el.style.opacity = '0';
+    el.style.transform = 'translateX(-50%) translateY(10px)';
+    setTimeout(() => { if (el) el.style.display = 'none'; }, 350);
+  }
 }
 
 // ══════════════════════════════════════════════
@@ -1067,6 +1262,12 @@ function doLogout() {
 function toggleLogin() {
   if (currentUser) { showView('admin'); return; }
   document.getElementById('loginOverlay').classList.toggle('open');
+}
+
+function toggleMobileMenu() {
+  const m = document.getElementById('mobileMenuOverlay');
+  if (!m) return;
+  m.style.display = m.style.display === 'none' ? 'block' : 'none';
 }
 
 // ══════════════════════════════════════════════
@@ -1548,7 +1749,7 @@ function renderMeuPerfil(el) {
     : `<div style="width:90px;height:90px;border-radius:50%;background:var(--mid);border:3px solid var(--gold);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--gold);">${p.name.substring(0,2).toUpperCase()}</div>`;
 
   el.innerHTML = `
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px;">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px;">
       <div class="panel">
         <div class="panel-header"><span class="panel-title">MEU PERFIL</span></div>
         <div class="panel-body">
@@ -1565,7 +1766,7 @@ function renderMeuPerfil(el) {
               ${p.suspended ? '<span class="badge badge-red" style="margin-top:6px;margin-left:4px;">🚫 SUSPENSO</span>' : ''}
             </div>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
+          <div class="grid-2col-sm" style="margin-bottom:20px;">
             ${[
               ['JOGOS',p.games,'var(--white)'],
               ['GOLS',p.goals,'var(--gold)'],
@@ -1746,7 +1947,7 @@ function renderRanking(el) {
   const empty = msg => '<p style="font-family:Oswald,sans-serif;font-size:12px;letter-spacing:2px;color:#555;padding:16px 0;">' + msg + '</p>';
 
   el.innerHTML = '<div style="margin-bottom:20px;display:flex;gap:6px;flex-wrap:wrap;">' + tabBtns + '</div>' +
-    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;">' +
+    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:14px;">' +
     '<div class="panel"><div class="panel-header"><span class="panel-title">📅 COMPARECIMENTO</span></div><div class="panel-body">' +
     mkTable(['#','Atleta','Jogos','%'], byAttend.map((p,i)=>'<tr><td>'+medal(i)+'</td><td><strong>'+p.name.split(' ')[0]+'</strong></td><td style="text-align:center;">'+p.games+'</td><td><strong style="color:'+(p.attendance>=90?'var(--green)':p.attendance>=70?'var(--gold)':'var(--red-light)')+';">'+p.attendance+'%</strong></td></tr>').join('')) +
     '</div></div>' +
@@ -1784,7 +1985,7 @@ function renderProxJogo(el) {
   const fieldHtml = buildFieldReadOnly();
 
   el.innerHTML = `
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:14px;">
       <div class="panel">
         <div class="panel-header"><span class="panel-title">PRÓXIMO JOGO</span></div>
         <div class="panel-body">
@@ -1853,13 +2054,13 @@ function buildTacticalField(formation, posSlots, players, editable, prefix) {
       const p = pid ? allPlayers.find(x => x.id == pid) : null;
       const color = posColor[row.pos] || '#555';
       if (editable) {
-        return `<div style="text-align:center;min-width:60px;">
+        return `<div style="text-align:center;min-width:52px;">
           <div style="width:40px;height:40px;border-radius:50%;background:${p?'var(--red)':'rgba(255,255,255,0.08)'};border:2px solid ${p?color:'rgba(255,255,255,0.12)'};margin:0 auto 3px;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:11px;color:${p?'#fff':'rgba(255,255,255,0.2)'};">
             ${p ? (p.num||'?') : '·'}
           </div>
           <div style="font-family:'Oswald',sans-serif;font-size:8px;color:${color};letter-spacing:1px;margin-bottom:3px;">${row.pos}</div>
           <select onchange="${prefix||''}setSlotPlayer('${key}',this.value)"
-            style="width:66px;background:rgba(0,0,0,0.6);border:1px solid ${color};color:#fff;padding:2px 3px;font-family:'Oswald',sans-serif;font-size:9px;outline:none;text-align:center;">
+            style="width:60px;background:rgba(0,0,0,0.6);border:1px solid ${color};color:#fff;padding:2px 2px;font-family:'Oswald',sans-serif;font-size:9px;outline:none;text-align:center;">
             ${pOpts(key)}
           </select>
         </div>`;
@@ -1877,7 +2078,7 @@ function buildTacticalField(formation, posSlots, players, editable, prefix) {
     return `<div style="display:flex;justify-content:center;gap:6px;margin-bottom:${editable?'12px':'8px'};flex-wrap:wrap;">${slots}</div>`;
   }).join('');
 
-  const pitchStyle = 'background:linear-gradient(to bottom,#0a3d0a 0%,#145214 30%,#145214 70%,#0a3d0a 100%);border:2px solid #2d7a2d;padding:14px 10px;border-radius:4px;position:relative;';
+  const pitchStyle = 'background:linear-gradient(to bottom,#0a3d0a 0%,#145214 30%,#145214 70%,#0a3d0a 100%);border:2px solid #2d7a2d;padding:14px 8px;border-radius:4px;position:relative;width:100%;max-width:340px;';
   const lineStyle = 'position:absolute;left:10%;right:10%;height:1px;background:rgba(255,255,255,0.08);';
 
   return `<div style="${pitchStyle}">
@@ -2013,7 +2214,7 @@ function buildSumulaInline(allPlayers, ng) {
     '<div style="font-family:Bebas Neue,sans-serif;font-size:32px;color:#444;">x</div>' +
     '<div style="text-align:center;"><div style="font-family:Oswald,sans-serif;font-size:10px;letter-spacing:3px;color:#888;margin-bottom:4px;">'+(ng&&ng.adversary?ng.adversary:'ADVERSARIO')+'</div>' +
     '<input type="number" id="jsum_them" min="0" value="" placeholder="0" style="background:transparent;border:none;border-bottom:2px solid #555;color:var(--white);font-family:Bebas Neue,sans-serif;font-size:48px;text-align:center;width:72px;outline:none;"></div></div>' +
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">' +
+    '<div class="grid-2col">' +
     '<div><div class="section-label" style="margin-bottom:8px;">GOLEADORES</div>'+rows(7,'jsg_',true,true)+'</div>' +
     '<div><div class="section-label" style="margin-bottom:8px;">ASSISTENCIAS</div>'+rows(7,'jsa_',false,false)+'</div>' +
     '</div>' +
@@ -2221,7 +2422,7 @@ function renderDossie(el) {
           <span class="panel-title">📋 HISTÓRICO DE SÚMULAS</span>
           <span class="badge badge-gold">${pastGames.length} jogos realizados · ${dossies.length} súmulas</span>
         </div>
-        <div class="panel-body" style="overflow-x:auto;">
+        <div class="panel-body" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
           ${pastGames.length === 0
             ? `<p style="font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:2px;color:#555;padding:20px 0;text-align:center;">Nenhum jogo cadastrado ainda.</p>`
             : `<table class="data-table" style="min-width:540px;">
@@ -2373,7 +2574,7 @@ function buildDossieForm(d, allPlayers, isEdit) {
             <div style="font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:3px;color:var(--gold);">EVENTOS DO JOGO</div>
           </div>
           <!-- Adicionar evento -->
-          <div style="display:grid;grid-template-columns:60px 1fr auto auto auto;gap:8px;align-items:center;padding:10px 14px;border-bottom:1px solid #1a1a1a;">
+          <div class="grid-events" style="padding:10px 14px;border-bottom:1px solid #1a1a1a;">
             <div>
               <input type="number" id="evMinute" min="1" max="120" placeholder="0'" value=""
                 style="width:100%;background:var(--mid);border:1px solid #444;color:var(--white);padding:6px;font-family:'Bebas Neue',sans-serif;font-size:18px;text-align:center;outline:none;" title="Minuto do evento"/>
@@ -2408,7 +2609,7 @@ function buildDossieForm(d, allPlayers, isEdit) {
         </div>
 
         <!-- MVP e observações -->
-        <div style="display:grid;grid-template-columns:1fr 2fr;gap:12px;margin-bottom:20px;">
+        <div class="grid-mvp-obs" style="margin-bottom:20px;">
           <div class="form-group" style="margin:0;">
             <label>🏆 MVP DO JOGO</label>
             <select id="dMvp" style="background:var(--mid);border:1px solid #444;color:var(--white);padding:7px 10px;font-family:'Oswald',sans-serif;font-size:12px;width:100%;outline:none;">${mvpOpts}</select>
@@ -2424,7 +2625,7 @@ function buildDossieForm(d, allPlayers, isEdit) {
         <div style="margin-bottom:20px;">
           <div class="section-label" style="margin-bottom:8px;">FORMAÇÃO TÁTICA</div>
           <div id="dFormationBtns" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">${formBtns}</div>
-          <div style="display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:start;">
+          <div class="grid-field-players">
             <div>
               <div class="section-label" style="margin-bottom:6px;">CAMPINHO — <span id="dFormLabel">${formation}</span></div>
               <div id="dossieFieldContainer">${buildTacticalField(formation, posSlots, pAll, true, 'dossie_')}</div>
@@ -2432,7 +2633,7 @@ function buildDossieForm(d, allPlayers, isEdit) {
             <div>
               <div class="section-label" style="margin-bottom:8px;">ATLETAS DA PARTIDA</div>
               <p style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:2px;color:#666;margin-bottom:8px;">Marque quem jogou e quem ficou no banco:</p>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px;max-height:320px;overflow-y:auto;padding-right:4px;">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px;max-height:280px;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-right:4px;">
                 ${pAll.map(p => {
                   const isTitular = Object.values(posSlots||{}).includes(p.id) || Object.values(posSlots||{}).map(Number).includes(p.id);
                   return `<div style="display:flex;align-items:center;gap:0;padding:4px 2px;border-bottom:1px solid #1a1a1a;">
@@ -2450,7 +2651,7 @@ function buildDossieForm(d, allPlayers, isEdit) {
         </div>
 
         <!-- Goleadores + Assistências -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;">
+        <div class="grid-2col" style="margin-bottom:24px;">
           <div>
             <div class="section-label" style="margin-bottom:8px;">⚽ GOLEADORES</div>
             ${scorerRows}
@@ -2978,7 +3179,7 @@ function renderFinanceiro(el) {
         </span>
       </div>
       <div class="panel-body">
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px;">
+        <div class="grid-3col-sm" style="margin-bottom:20px;">
           <div style="background:rgba(46,204,113,0.08);border:1px solid rgba(46,204,113,0.2);padding:14px;text-align:center;">
             <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--green);">R$ ${entradas.toFixed(2)}</div>
             <div style="font-family:'Oswald',sans-serif;font-size:9px;letter-spacing:2px;color:#666;">ENTRADAS</div>
@@ -3025,7 +3226,7 @@ function renderFinanceiro(el) {
     </div>` : '';
 
   const table = isManager ? `
-    <div style="overflow-x:auto;">
+    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
       <p style="font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:2px;color:#666;margin-bottom:12px;">
         Clique → ✅ Pago · Novamente → — Sem cobrança · Novamente → ⭕ Pendente
       </p>
@@ -3326,7 +3527,7 @@ function renderUsuarios(el) {
       </div>
       <div class="panel" style="grid-column:1/-1;">
         <div class="panel-header"><span class="panel-title">ATLETAS CADASTRADOS</span><span class="badge badge-gold">${DB.players.filter(p=>p.role!=='admin').length} atletas</span></div>
-        <div class="panel-body" style="overflow-x:auto;">
+        <div class="panel-body" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
           <table class="data-table" style="min-width:700px;">
             <thead><tr><th>Emoji</th><th>Nome</th><th>#️⃣</th><th>Login</th><th>Posição</th><th>Nível</th><th style="text-align:center;">Ações</th></tr></thead>
             <tbody>
@@ -3567,11 +3768,14 @@ function closeModal() { document.getElementById('modalOverlay').classList.remove
 // INIT
 // ══════════════════════════════════════════════
 (async () => {
-  renderPublicSite(); // render with default data immediately
-  await sbLoad();     // then overlay-load from Supabase (if configured)
+  showView('site');
+  renderPublicSite();          // ← site visível imediatamente com dados locais
   if (!SB_READY) {
-    console.warn('Supabase não configurado — rodando em modo local (dados não persistem).');
+    console.warn('Supabase não configurado — modo local.');
+    return;
   }
+  await sbLoad();              // ← sincroniza em background (indicator discreto)
+  renderPublicSite();          // ← atualiza site com dados reais do Supabase
 })();
   // ══════════════════════════════════════════════
   // Bloqueia o menu de contexto (Botão direito)
