@@ -129,15 +129,61 @@ body { background: var(--black); color: var(--white); font-family: 'Barlow', san
 /* ── RESULTADOS ── */
 .results-section { background:var(--black); }
 .results-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:20px; max-width:1000px; }
-.result-card { background:var(--dark); border:1px solid #333; padding:24px; position:relative; overflow:hidden; }
-.result-card::before { content:''; position:absolute; top:0;left:0; width:3px; height:100%; background:var(--red); }
-.result-date { font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:3px; color:var(--gold); margin-bottom:10px; }
-.result-score { font-family:'Bebas Neue',sans-serif; font-size:42px; color:var(--white); letter-spacing:4px; margin-bottom:6px; }
-.result-score .win { color:var(--green); }
-.result-score .loss { color:var(--red-light); }
-.result-score .draw { color:var(--gold); }
-.result-adversary { font-family:'Oswald',sans-serif; font-size:13px; color:var(--cream); margin-bottom:12px; }
-.result-scorers { font-size:12px; color:#666; font-style:italic; line-height:1.6; }
+.result-card {
+  background:var(--dark); border:1px solid #2a2a2a; position:relative; overflow:hidden;
+  transition:border-color .2s, transform .2s;
+}
+.result-card:hover { border-color:#444; transform:translateY(-2px); }
+.result-card-top {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:10px 16px 0; gap:8px;
+}
+.result-card-date { font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:3px; color:#666; }
+.result-card-badge { flex-shrink:0; }
+.result-card-match {
+  display:flex; align-items:center; justify-content:center;
+  gap:0; padding:16px 16px 12px;
+}
+.result-team {
+  display:flex; flex-direction:column; align-items:center; gap:8px;
+  flex:1; min-width:0;
+}
+.result-team-logo {
+  width:52px; height:52px; border-radius:50%; overflow:hidden;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(255,255,255,0.04); border:2px solid #2a2a2a; flex-shrink:0;
+}
+.result-team-logo img { width:100%; height:100%; object-fit:contain; padding:4px; }
+.result-team-logo-initials {
+  font-family:'Bebas Neue',sans-serif; font-size:18px; letter-spacing:1px;
+}
+.result-team-name {
+  font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:2px;
+  color:var(--cream); text-align:center; text-transform:uppercase;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100px;
+}
+.result-scoreboard {
+  display:flex; flex-direction:column; align-items:center; gap:2px;
+  padding:0 12px; flex-shrink:0;
+}
+.result-score-nums {
+  font-family:'Bebas Neue',sans-serif; font-size:52px; line-height:1;
+  letter-spacing:-2px; display:flex; align-items:center; gap:6px;
+}
+.result-score-sep { font-family:'Bebas Neue',sans-serif; font-size:36px; color:#333; }
+.result-score-win  { color:var(--green); }
+.result-score-loss { color:var(--red-light); }
+.result-score-draw { color:var(--gold); }
+.result-card-bottom {
+  padding:0 16px 14px;
+  border-top:1px solid #1e1e1e; margin-top:4px; padding-top:10px;
+}
+.result-scorers { font-size:11px; color:#666; font-style:italic; line-height:1.7; }
+.result-scorers span { color:#888; }
+/* legacy aliases */
+.result-card::before { display:none; }
+.result-date { display:none; }
+.result-adversary { display:none; }
 
 /* ── HALL DA FAMA ── */
 .halloffame-section { background:var(--dark); }
@@ -1144,11 +1190,7 @@ const DB = {
     { date:'21/11/2026', adversary:'Baxada FC',              time:'16:00h', local:'Campo do Rio Grande', fora:false, mapsUrl:'', adversaryLogo:null },
     { date:'28/11/2026', adversary:'',                       time:'16:00h', local:'Campo do Rio Grande', fora:false, mapsUrl:'', adversaryLogo:null }
   ],
-  results: [
-    { id:1, adversary:'Unidos do Barro', score_us:3, score_them:1, date:'08/03/2026', scorers:['João (2)', 'Marquinhos (1)'], assists:['Paulinho','Carlos'] },
-    { id:2, adversary:'Atlético Campeche', score_us:2, score_them:2, date:'01/03/2026', scorers:['Tião (1)', 'Binho (1)'], assists:['João','Tião'] },
-    { id:3, adversary:'Estrela do Sul FC', score_us:4, score_them:0, date:'22/02/2026', scorers:['João (2)', 'Zé (1)', 'Pedro (1)'], assists:['Paulinho','Marquinhos','Binho'] }
-  ],
+  results: [],
   players: [
     { id:1,  name:'Marcelo (Piranha)', pos:'Goleiro',    num:1,  games:0, goals:0, assists:0, attendance:0, mvpPts:0, paid:false, role:'atleta',    user:'marcelo',  pass:'marcelo123', trophies:[], photo:null, yellowCards:0, redCards:0, suspended:false },
     { id:2,  name:'Lucas',             pos:'Defesa',     num:2,  games:0, goals:0, assists:0, attendance:0, mvpPts:0, paid:false, role:'atleta',    user:'lucas',    pass:'lucas123', trophies:[], photo:null, yellowCards:0, redCards:0, suspended:false },
@@ -1354,16 +1396,59 @@ function renderPublicSite() {
   if (rg) rg.innerHTML = filteredResults.length
     ? filteredResults.map(r => {
         const diff = r.score_us - r.score_them;
-        const cls = diff>0?'win':diff<0?'loss':'draw';
-        const label = diff>0?'✓ VITÓRIA':diff<0?'✗ DERROTA':'= EMPATE';
-        return '<div class="result-card">' +
-          '<div class="result-date">' + r.date + ' · vs ' + r.adversary + '</div>' +
-          '<div class="result-score"><span class="' + cls + '">' + r.score_us + '</span> × <span>' + r.score_them + '</span></div>' +
-          '<div class="result-adversary"><span class="badge ' + (cls==='win'?'badge-green':cls==='loss'?'badge-red':'badge-gold') + '">' + label + '</span></div>' +
-          '<div class="result-scorers">⚽ ' + (r.scorers||[]).join(' · ') + '<br>🎯 ' + (r.assists||[]).join(' · ') + '</div>' +
-          '</div>';
+        const cls  = diff > 0 ? 'win' : diff < 0 ? 'loss' : 'draw';
+        const label = diff > 0 ? 'VITÓRIA' : diff < 0 ? 'DERROTA' : 'EMPATE';
+        const badgeCls = cls === 'win' ? 'badge-green' : cls === 'loss' ? 'badge-red' : 'badge-gold';
+        const borderColor = cls === 'win' ? 'var(--green)' : cls === 'loss' ? 'var(--red-light)' : 'var(--gold)';
+
+        // Logo VCFC — usa a logo do clube se existir, senão escudo SVG embutido
+        const vcfcLogo = `<div class="result-team-logo" style="border-color:var(--red);background:rgba(204,26,26,0.08);">
+          <img src="logo-viracopofc.png" alt="VCFC"
+            onerror="this.style.display='none';this.nextSibling.style.display='flex';"
+            style="padding:6px;">
+          <div class="result-team-logo-initials" style="display:none;color:var(--red);">VC</div>
+        </div>`;
+
+        // Logo do adversário — usa logo salva na agenda se existir
+        const gameWithLogo = (DB.scheduleAll[pubResultsSeason] || DB.schedule || [])
+          .find(g => g.date === r.date && g.adversary === r.adversary);
+        const advLogoSrc = r.adversaryLogo || gameWithLogo?.adversaryLogo || null;
+        const advInitials = r.adversary.split(' ').map(w=>w[0]).join('').substring(0,3).toUpperCase();
+        const advLogo = advLogoSrc
+          ? `<div class="result-team-logo"><img src="${advLogoSrc}" alt="${r.adversary}"></div>`
+          : `<div class="result-team-logo"><div class="result-team-logo-initials" style="color:#888;font-size:${advInitials.length>2?'13px':'18px'};">${advInitials}</div></div>`;
+
+        const scorersLine = (r.scorers||[]).length
+          ? `<div>⚽ <span>${(r.scorers||[]).join(' · ')}</span></div>` : '';
+        const assistsLine = (r.assists||[]).length
+          ? `<div>🎯 <span>${(r.assists||[]).join(' · ')}</span></div>` : '';
+
+        return `<div class="result-card" style="border-top:3px solid ${borderColor};">
+          <div class="result-card-top">
+            <div class="result-card-date">${r.date}</div>
+            <span class="badge ${badgeCls}">${label}</span>
+          </div>
+          <div class="result-card-match">
+            <div class="result-team">
+              ${vcfcLogo}
+              <div class="result-team-name">VIRA COPO FC</div>
+            </div>
+            <div class="result-scoreboard">
+              <div class="result-score-nums">
+                <span class="result-score-${cls}">${r.score_us}</span>
+                <span class="result-score-sep">×</span>
+                <span style="color:${cls==='loss'?'var(--green)':cls==='win'?'var(--red-light)':'var(--gold)'};">${r.score_them}</span>
+              </div>
+            </div>
+            <div class="result-team">
+              ${advLogo}
+              <div class="result-team-name">${r.adversary}</div>
+            </div>
+          </div>
+          ${(scorersLine||assistsLine) ? `<div class="result-card-bottom"><div class="result-scorers">${scorersLine}${assistsLine}</div></div>` : ''}
+        </div>`;
       }).join('')
-    : '<p style="font-family:Oswald,sans-serif;font-size:13px;letter-spacing:2px;color:#555;text-align:center;padding:30px;">Nenhum resultado em ' + pubResultsSeason + '.</p>';
+    : `<p style="font-family:Oswald,sans-serif;font-size:13px;letter-spacing:2px;color:#555;text-align:center;padding:30px;grid-column:1/-1;">Nenhum resultado em ${pubResultsSeason}.</p>`;
 
   // ── Hall da Fama por temporada ──
   const hofTabs = document.getElementById('hofSeasonTabs');
