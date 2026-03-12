@@ -1086,7 +1086,7 @@ async function loadTeamBySlug(slug) {
       foundedYear: t.founded_year || 2000,
       instagram: t.instagram || '', whatsapp: t.whatsapp || '',
       slogan: t.slogan || '', tagline: t.tagline || '',
-      active: t.active === true, // só true se explicitamente true
+      active: t.active !== false, // null ou true = ativo; só false = bloqueado
       plan: t.plan || 'basic',
       billingDay: t.billing_day, lastPayment: t.last_payment,
       nextBilling: t.next_billing, notes: t.notes || '',
@@ -4889,7 +4889,7 @@ async function initSaaS() {
 
   if (teamCfg) {
     // Só bloqueia se explicitamente active === false E o time foi encontrado
-    if (teamCfg.active === false) {
+    if (teamCfg.active === false || teamCfg.active === 'blocked') {
       console.log('[GestãoFC] Time bloqueado no Supabase');
       showViewRaw('blocked');
       return;
