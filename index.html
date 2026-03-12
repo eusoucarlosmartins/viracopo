@@ -983,8 +983,20 @@ const COLOR_TEMPLATES = {
 
 // ── Lê o slug da URL: /viracopo → "viracopo", /admin → "admin" ──
 function getSlugFromUrl() {
-  const path = window.location.pathname.replace(/^\//, '').split('/')[0].toLowerCase();
-  return path || '';
+  // Suporte a múltiplos formatos de URL:
+  // ?team=viracopo  → slug "viracopo"
+  // ?admin          → "admin"
+  // #viracopo       → slug "viracopo"
+  // #admin          → "admin"
+  // /viracopo       → slug "viracopo" (apenas em servidor com rewrite)
+  const params = new URLSearchParams(window.location.search);
+  if (params.has('admin') || params.get('team') === 'admin') return 'admin';
+  if (params.get('team')) return params.get('team').toLowerCase();
+  const hash = window.location.hash.replace(/^#/, '').toLowerCase();
+  if (hash) return hash;
+  const path = window.location.pathname.replace(/.*\//, '').replace(/\.html$/,'').toLowerCase();
+  if (path && path !== 'index' && path !== '') return path;
+  return '';
 }
 
 // ── Aplica as cores e dados do time no DOM ──
@@ -4294,8 +4306,8 @@ function renderSaNovo(el) {
   el.innerHTML = `
     <div style="max-width:560px;">
       <div style="font-family:Oswald,sans-serif;font-size:16px;letter-spacing:3px;color:#fff;margin-bottom:24px;">CADASTRAR NOVO TIME</div>
-      <div class="form-group"><label>Slug (URL) *</label><input type="text" id="saNewSlug" placeholder="ex: novotime" style="font-family:monospace;" oninput="document.getElementById('saSlugPreview').textContent='/'+this.value.toLowerCase().replace(/[^a-z0-9]/g,'')"></div>
-      <div style="font-family:Oswald,sans-serif;font-size:11px;letter-spacing:2px;color:var(--gold);margin:-8px 0 16px;">URL: gestaofc.com.br<span id="saSlugPreview">/</span></div>
+      <div class="form-group"><label>Slug (URL) *</label><input type="text" id="saNewSlug" placeholder="ex: novotime" style="font-family:monospace;" oninput="document.getElementById('saSlugPreview').textContent=this.value.toLowerCase().replace(/[^a-z0-9]/g,'')"></div>
+      <div style="font-family:Oswald,sans-serif;font-size:11px;letter-spacing:2px;color:var(--gold);margin:-8px 0 16px;">URL: gestaofc.com.br/?team=<span id="saSlugPreview">slug</span></div>
       <div class="form-group"><label>Nome do Time *</label><input type="text" id="saNewName" placeholder="ex: Sotapa FC"></div>
       <div class="grid-2col">
         <div class="form-group"><label>Cidade</label><input type="text" id="saNewCity" placeholder="Palhoça"></div>
