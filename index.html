@@ -999,19 +999,23 @@ const COLOR_TEMPLATES = {
 
 // ── Lê o slug da URL: /viracopo → "viracopo", /admin → "admin" ──
 function getSlugFromUrl() {
-  // Suporte a múltiplos formatos de URL:
-  // ?team=viracopo  → slug "viracopo"
-  // ?admin          → "admin"
-  // #viracopo       → slug "viracopo"
-  // #admin          → "admin"
-  // /viracopo       → slug "viracopo" (apenas em servidor com rewrite)
-  const params = new URLSearchParams(window.location.search);
-  if (params.has('admin') || params.get('team') === 'admin') return 'admin';
-  if (params.get('team')) return params.get('team').toLowerCase();
-  const hash = window.location.hash.replace(/^#/, '').toLowerCase();
-  if (hash) return hash;
-  const path = window.location.pathname.replace(/.*\//, '').replace(/\.html$/,'').toLowerCase();
-  if (path && path !== 'index' && path !== '') return path;
+  const search = window.location.search;   // ex: "?admin" ou "?team=viracopo"
+  const hash   = window.location.hash;     // ex: "#admin"
+  console.log('[GestãoFC] URL search:', search, '| hash:', hash);
+
+  // Formato ?admin ou ?admin=qualquercoisa
+  if (search === '?admin' || search.startsWith('?admin=') || search.startsWith('?admin&')) return 'admin';
+
+  // Formato ?team=xxx
+  const params = new URLSearchParams(search);
+  if (params.has('admin')) return 'admin';
+  if (params.get('team') === 'admin') return 'admin';
+  if (params.get('team')) return params.get('team').toLowerCase().trim();
+
+  // Formato #admin ou #viracopo
+  const h = hash.replace(/^#\/?/, '').toLowerCase().trim();
+  if (h) return h;
+
   return '';
 }
 
@@ -4191,6 +4195,7 @@ function closeModal() { document.getElementById('modalOverlay').classList.remove
 // SUPER ADMIN
 // ══════════════════════════════════════════════
 function showViewRaw(v) {
+  if (v === 'blocked') console.trace('[GestãoFC] showViewRaw(blocked) chamado por:');
   document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
   const el = document.getElementById('view-' + v);
   if (el) el.classList.add('active');
