@@ -597,7 +597,7 @@ input, select, textarea, button { -webkit-tap-highlight-color: transparent; }
 }
 
 /* ══════════════════ LANDING PAGE ══════════════════ */
-.landing-view { min-height:100vh; background:var(--black); }
+.landing-view { min-height:100vh; background:var(--black); position:relative; }
 .landing-hero {
   min-height:60vh; display:flex; flex-direction:column;
   align-items:center; justify-content:center; text-align:center;
@@ -692,12 +692,16 @@ input, select, textarea, button { -webkit-tap-highlight-color: transparent; }
   </div>
 </div>
 <div id="view-landing" class="view landing-view">
+  <!-- Botão Admin fixo no canto superior direito da landing -->
+  <div style="position:absolute;top:16px;right:20px;z-index:200;">
+    <button onclick="showSaLoginOverlay()" style="font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:2px;padding:8px 18px;background:transparent;border:1px solid #333;color:#555;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)';" onmouseout="this.style.borderColor='#333';this.style.color='#555';">⚙ ADMIN</button>
+  </div>
   <div class="landing-hero">
     <div class="landing-title"><span>MEU</span>TIME</div>
     <div class="landing-sub">A PLATAFORMA DOS TIMES DE FUTEBOL AMADOR</div>
     <div class="landing-cta">
       <a class="btn-primary" onclick="document.getElementById('landingTeamsSection').scrollIntoView({behavior:'smooth'})">VER TIMES</a>
-      <a class="btn-outline" href="/cdn-cgi/l/email-protection#086b67667c697c6748656d7d7c61656d266b6765266a7a">QUERO MEU TIME AQUI</a>
+      <a class="btn-outline" href="https://wa.me/5548996962910?text=Quero+cadastrar+meu+time+no+GestãoFC" target="_blank">QUERO MEU TIME AQUI</a>
     </div>
   </div>
   <div class="landing-teams-section" id="landingTeamsSection">
