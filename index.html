@@ -298,20 +298,20 @@ body { background: var(--black); color: var(--white); font-family: 'Barlow', san
 .admin-nav-group-btn:hover { color:var(--cream); }
 .admin-nav-group-btn.active { color:var(--red-light); border-bottom-color:var(--red); }
 .admin-nav-group-btn .arrow { font-size:8px; transition:transform .2s; opacity:.5; }
-.admin-nav-group-btn.open .arrow { transform:rotate(180deg); }
+.admin-nav-group:hover .arrow { transform:rotate(180deg); }
 .admin-nav-dropdown {
   display:none; position:absolute; top:100%; left:0; z-index:500;
-  background:#0e0e0e; border:1px solid #2a2a2a; border-top:none; min-width:180px;
-  box-shadow:0 8px 24px rgba(0,0,0,0.6);
+  background:#0e0e0e; border:1px solid #2a2a2a; border-top:2px solid var(--red); min-width:200px;
+  box-shadow:0 8px 24px rgba(0,0,0,0.8);
 }
-.admin-nav-dropdown.open { display:block; }
+.admin-nav-group:hover .admin-nav-dropdown { display:block; }
 .admin-nav-sub {
   font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:2px;
   color:#666; padding:12px 18px; cursor:pointer; border:none; background:none;
   white-space:nowrap; width:100%; text-align:left; text-transform:uppercase;
   border-left:2px solid transparent; transition:all .15s; display:block;
 }
-.admin-nav-sub:hover { color:var(--cream); background:rgba(255,255,255,0.03); }
+.admin-nav-sub:hover { color:var(--cream); background:rgba(255,255,255,0.03); border-left-color:#333; }
 .admin-nav-sub.active { color:var(--red-light); border-left-color:var(--red); background:rgba(204,26,26,0.06); }
 
 /* subabas do Dia de Jogo (stepper interno) */
@@ -343,7 +343,6 @@ body { background: var(--black); color: var(--white); font-family: 'Barlow', san
 .admin-tab { font-family:'Oswald',sans-serif; font-size:12px; letter-spacing:2px; text-transform:uppercase; color:#666; padding:14px 18px; cursor:pointer; border-bottom:2px solid transparent; white-space:nowrap; background:none; border-top:none; border-left:none; border-right:none; transition:color .2s; }
 .admin-tab:hover { color:var(--cream); }
 .admin-tab.active { color:var(--red-light); border-bottom-color:var(--red); }
-
 
 /* ── CARDS / PANELS ── */
 .panel {
@@ -643,89 +642,97 @@ input, select, textarea, button { -webkit-tap-highlight-color: transparent; }
 
 /* ══════════════════ LANDING PAGE ══════════════════ */
 /* ══ LANDING — SALES PAGE ══ */
-.landing-view { background:#080808; position:relative; overflow-x:hidden; }
+/* ─────────────────────────────────────────────────────────
+   PALETA GESTÃOFC
+   --lp-bg:    #000407  azul marinho profundo
+   --lp-red:   #79031D  carmim escuro
+   --lp-gold:  #EDB518  âmbar vibrante
+   --lp-white: #F5F7F7  branco gelo
+   ───────────────────────────────────────────────────────── */
+.landing-view { background:#000407; position:relative; overflow-x:hidden; }
+
+/* NAV */
+.lp-nav { position:absolute; top:0; left:0; right:0; z-index:100; display:flex; align-items:center; justify-content:space-between; padding:20px 40px; }
+.lp-nav-logo { font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:4px; color:#F5F7F7; }
+.lp-nav-logo span { color:#EDB518; }
+.lp-nav-admin { font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:2px; padding:7px 16px; background:transparent; border:1px solid rgba(237,181,24,0.22); color:rgba(237,181,24,0.45); cursor:pointer; transition:all .2s; }
+.lp-nav-admin:hover { border-color:#EDB518; color:#EDB518; }
 
 /* HERO */
-.lp-nav { position:absolute; top:0; left:0; right:0; z-index:100; display:flex; align-items:center; justify-content:space-between; padding:20px 40px; }
-.lp-nav-logo { font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:4px; color:#fff; }
-.lp-nav-logo span { color:var(--red); }
-.lp-nav-admin { font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:2px; padding:7px 16px; background:transparent; border:1px solid #2a2a2a; color:#444; cursor:pointer; transition:all .2s; }
-.lp-nav-admin:hover { border-color:var(--gold); color:var(--gold); }
-
 .lp-hero { min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:120px 24px 80px; position:relative; overflow:hidden; }
-.lp-hero-bg { position:absolute; inset:0; background:radial-gradient(ellipse 80% 60% at 50% 0%, rgba(204,26,26,0.18) 0%, transparent 70%), radial-gradient(ellipse 40% 40% at 80% 80%, rgba(200,150,62,0.06) 0%, transparent 60%); }
-.lp-hero-grid { position:absolute; inset:0; background-image:linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px); background-size:60px 60px; }
-.lp-hero-tag { font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:4px; color:var(--gold); border:1px solid rgba(200,150,62,0.3); padding:6px 18px; display:inline-block; margin-bottom:28px; position:relative; z-index:1; }
-.lp-hero-title { font-family:'Bebas Neue',sans-serif; font-size:clamp(42px,8vw,88px); color:#fff; letter-spacing:3px; line-height:0.95; position:relative; z-index:1; max-width:900px; }
-.lp-hero-title em { color:var(--red); font-style:normal; }
-.lp-hero-sub { font-family:'Barlow Condensed',sans-serif; font-size:clamp(16px,2.5vw,20px); color:#888; margin:24px 0 40px; position:relative; z-index:1; max-width:580px; line-height:1.6; font-weight:300; }
+.lp-hero-bg { position:absolute; inset:0; background:radial-gradient(ellipse 80% 60% at 50% 0%, rgba(121,3,29,0.30) 0%, transparent 65%), radial-gradient(ellipse 50% 50% at 80% 85%, rgba(237,181,24,0.07) 0%, transparent 60%); }
+.lp-hero-grid { position:absolute; inset:0; background-image:linear-gradient(rgba(237,181,24,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(237,181,24,0.025) 1px, transparent 1px); background-size:60px 60px; }
+.lp-hero-tag { font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:4px; color:#EDB518; border:1px solid rgba(237,181,24,0.35); padding:6px 18px; display:inline-block; margin-bottom:28px; position:relative; z-index:1; }
+.lp-hero-title { font-family:'Bebas Neue',sans-serif; font-size:clamp(42px,8vw,88px); color:#F5F7F7; letter-spacing:3px; line-height:0.95; position:relative; z-index:1; max-width:900px; }
+.lp-hero-title em { color:#EDB518; font-style:normal; }
+.lp-hero-sub { font-family:'Barlow Condensed',sans-serif; font-size:clamp(16px,2.5vw,20px); color:rgba(245,247,247,0.5); margin:24px 0 40px; position:relative; z-index:1; max-width:580px; line-height:1.6; font-weight:300; }
 .lp-cta-group { display:flex; gap:14px; flex-wrap:wrap; justify-content:center; position:relative; z-index:1; }
-.lp-btn-main { font-family:'Oswald',sans-serif; font-size:14px; letter-spacing:3px; padding:16px 36px; background:var(--red); color:#fff; border:none; cursor:pointer; text-decoration:none; transition:all .25s; position:relative; overflow:hidden; display:inline-block; }
-.lp-btn-main::before { content:''; position:absolute; inset:0; background:rgba(255,255,255,0.1); transform:translateX(-100%); transition:transform .3s; }
+.lp-btn-main { font-family:'Oswald',sans-serif; font-size:14px; letter-spacing:3px; padding:16px 36px; background:#EDB518; color:#000407; border:none; cursor:pointer; text-decoration:none; transition:all .25s; position:relative; overflow:hidden; display:inline-block; font-weight:700; }
+.lp-btn-main::before { content:''; position:absolute; inset:0; background:rgba(255,255,255,0.15); transform:translateX(-100%); transition:transform .3s; }
 .lp-btn-main:hover::before { transform:translateX(0); }
-.lp-btn-main:hover { transform:translateY(-2px); box-shadow:0 8px 32px rgba(204,26,26,0.4); }
-.lp-btn-ghost { font-family:'Oswald',sans-serif; font-size:13px; letter-spacing:2px; padding:16px 28px; background:transparent; color:#888; border:1px solid #2a2a2a; cursor:pointer; text-decoration:none; transition:all .2s; display:inline-block; }
-.lp-btn-ghost:hover { border-color:#555; color:#ccc; }
+.lp-btn-main:hover { transform:translateY(-2px); box-shadow:0 8px 32px rgba(237,181,24,0.45); }
+.lp-btn-ghost { font-family:'Oswald',sans-serif; font-size:13px; letter-spacing:2px; padding:16px 28px; background:transparent; color:rgba(245,247,247,0.4); border:1px solid rgba(245,247,247,0.14); cursor:pointer; text-decoration:none; transition:all .2s; display:inline-block; }
+.lp-btn-ghost:hover { border-color:rgba(245,247,247,0.4); color:#F5F7F7; }
 .lp-hero-stat-row { display:flex; gap:48px; justify-content:center; margin-top:64px; position:relative; z-index:1; flex-wrap:wrap; }
 .lp-stat { text-align:center; }
-.lp-stat-num { font-family:'Bebas Neue',sans-serif; font-size:40px; color:#fff; letter-spacing:2px; line-height:1; }
-.lp-stat-num span { color:var(--red); }
-.lp-stat-label { font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:3px; color:#444; margin-top:4px; }
+.lp-stat-num { font-family:'Bebas Neue',sans-serif; font-size:40px; color:#F5F7F7; letter-spacing:2px; line-height:1; }
+.lp-stat-num span { color:#EDB518; }
+.lp-stat-label { font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:3px; color:rgba(245,247,247,0.28); margin-top:4px; }
 
 /* BENEFÍCIOS */
 .lp-section { padding:100px 24px; max-width:1100px; margin:0 auto; }
-.lp-section-tag { font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:4px; color:var(--gold); margin-bottom:12px; }
-.lp-section-title { font-family:'Bebas Neue',sans-serif; font-size:clamp(32px,5vw,52px); color:#fff; letter-spacing:3px; line-height:1.05; margin-bottom:8px; }
-.lp-section-sub { font-family:'Barlow',sans-serif; font-size:15px; color:#555; margin-bottom:56px; }
+.lp-section-tag { font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:4px; color:#EDB518; margin-bottom:12px; }
+.lp-section-title { font-family:'Bebas Neue',sans-serif; font-size:clamp(32px,5vw,52px); color:#F5F7F7; letter-spacing:3px; line-height:1.05; margin-bottom:8px; }
+.lp-section-sub { font-family:'Barlow',sans-serif; font-size:15px; color:rgba(245,247,247,0.32); margin-bottom:56px; }
 .lp-benefits-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:2px; }
-.lp-benefit { background:#0f0f0f; padding:36px 28px; border:1px solid #161616; transition:all .3s; position:relative; overflow:hidden; }
-.lp-benefit::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:var(--red); transform:scaleX(0); transform-origin:left; transition:transform .3s; }
-.lp-benefit:hover { background:#121212; border-color:#222; }
+.lp-benefit { background:#00080f; padding:36px 28px; border:1px solid rgba(245,247,247,0.04); transition:all .3s; position:relative; overflow:hidden; }
+.lp-benefit::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg, #79031D, #EDB518); transform:scaleX(0); transform-origin:left; transition:transform .3s; }
+.lp-benefit:hover { background:#000d18; border-color:rgba(237,181,24,0.10); }
 .lp-benefit:hover::before { transform:scaleX(1); }
 .lp-benefit-icon { font-size:28px; margin-bottom:16px; }
-.lp-benefit-title { font-family:'Oswald',sans-serif; font-size:16px; letter-spacing:2px; color:#fff; margin-bottom:10px; }
-.lp-benefit-text { font-family:'Barlow',sans-serif; font-size:13px; color:#555; line-height:1.7; }
+.lp-benefit-title { font-family:'Oswald',sans-serif; font-size:16px; letter-spacing:2px; color:#F5F7F7; margin-bottom:10px; }
+.lp-benefit-text { font-family:'Barlow',sans-serif; font-size:13px; color:rgba(245,247,247,0.33); line-height:1.7; }
 
 /* PLANOS */
-.lp-plans-wrap { background:#050505; border-top:1px solid #111; border-bottom:1px solid #111; padding:100px 24px; }
+.lp-plans-wrap { background:#00060c; border-top:1px solid rgba(237,181,24,0.07); border-bottom:1px solid rgba(237,181,24,0.07); padding:100px 24px; }
 .lp-plans-inner { max-width:1000px; margin:0 auto; }
-.lp-plans-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:1px; background:#111; margin-top:56px; }
-.lp-plan { background:#0a0a0a; padding:40px 32px; position:relative; transition:background .2s; }
-.lp-plan:hover { background:#0f0f0f; }
-.lp-plan.featured { background:#0e0c0c; outline:1px solid rgba(204,26,26,0.5); outline-offset:-1px; }
-.lp-plan-badge { position:absolute; top:0; left:50%; transform:translateX(-50%) translateY(-50%); font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:3px; background:var(--red); color:#fff; padding:4px 14px; white-space:nowrap; }
-.lp-plan-name { font-family:'Bebas Neue',sans-serif; font-size:28px; letter-spacing:3px; color:#fff; margin-bottom:4px; }
-.lp-plan-price { font-family:'Bebas Neue',sans-serif; font-size:52px; color:#fff; letter-spacing:2px; line-height:1; }
-.lp-plan-price span { font-size:20px; color:#555; vertical-align:super; }
-.lp-plan-price sub { font-family:'Oswald',sans-serif; font-size:12px; letter-spacing:2px; color:#444; vertical-align:baseline; }
-.lp-plan-desc { font-family:'Barlow',sans-serif; font-size:13px; color:#555; margin:12px 0 28px; line-height:1.6; }
-.lp-plan-divider { height:1px; background:#161616; margin-bottom:24px; }
-.lp-plan-feature { font-family:'Barlow',sans-serif; font-size:13px; color:#666; padding:7px 0; display:flex; align-items:flex-start; gap:10px; border-bottom:1px solid #0d0d0d; }
+.lp-plans-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:1px; background:rgba(237,181,24,0.05); margin-top:56px; }
+.lp-plan { background:#000407; padding:40px 32px; position:relative; transition:background .2s; }
+.lp-plan:hover { background:#00060e; }
+.lp-plan.featured { background:#07010a; outline:1px solid rgba(121,3,29,0.55); outline-offset:-1px; }
+.lp-plan-badge { position:absolute; top:0; left:50%; transform:translateX(-50%) translateY(-50%); font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:3px; background:#79031D; color:#F5F7F7; padding:4px 14px; white-space:nowrap; }
+.lp-plan-name { font-family:'Bebas Neue',sans-serif; font-size:28px; letter-spacing:3px; color:#F5F7F7; margin-bottom:4px; }
+.lp-plan-price { font-family:'Bebas Neue',sans-serif; font-size:52px; color:#F5F7F7; letter-spacing:2px; line-height:1; }
+.lp-plan-price span { font-size:20px; color:rgba(245,247,247,0.32); vertical-align:super; }
+.lp-plan-price sub { font-family:'Oswald',sans-serif; font-size:12px; letter-spacing:2px; color:rgba(245,247,247,0.28); vertical-align:baseline; }
+.lp-plan-desc { font-family:'Barlow',sans-serif; font-size:13px; color:rgba(245,247,247,0.33); margin:12px 0 28px; line-height:1.6; }
+.lp-plan-divider { height:1px; background:rgba(237,181,24,0.07); margin-bottom:24px; }
+.lp-plan-feature { font-family:'Barlow',sans-serif; font-size:13px; color:rgba(245,247,247,0.48); padding:7px 0; display:flex; align-items:flex-start; gap:10px; border-bottom:1px solid rgba(245,247,247,0.04); }
 .lp-plan-feature:last-child { border-bottom:none; }
-.lp-plan-feature .chk { color:var(--gold); font-size:11px; flex-shrink:0; margin-top:1px; }
+.lp-plan-feature .chk { color:#EDB518; font-size:11px; flex-shrink:0; margin-top:1px; }
 .lp-plan-cta { margin-top:28px; }
 .lp-plan-cta button { width:100%; font-family:'Oswald',sans-serif; font-size:12px; letter-spacing:3px; padding:14px; cursor:pointer; transition:all .2s; }
-.lp-plan.featured .lp-plan-cta button { background:var(--red); color:#fff; border:none; }
-.lp-plan.featured .lp-plan-cta button:hover { background:#e02020; }
-.lp-plan:not(.featured) .lp-plan-cta button { background:transparent; color:#666; border:1px solid #222; }
-.lp-plan:not(.featured) .lp-plan-cta button:hover { border-color:#555; color:#ccc; }
+.lp-plan.featured .lp-plan-cta button { background:#EDB518; color:#000407; border:none; font-weight:700; }
+.lp-plan.featured .lp-plan-cta button:hover { background:#f5c832; box-shadow:0 4px 20px rgba(237,181,24,0.35); }
+.lp-plan:not(.featured) .lp-plan-cta button { background:transparent; color:rgba(245,247,247,0.38); border:1px solid rgba(245,247,247,0.10); }
+.lp-plan:not(.featured) .lp-plan-cta button:hover { border-color:rgba(245,247,247,0.3); color:#F5F7F7; }
 
 /* TIMES */
 .lp-teams-wrap { padding:100px 24px; max-width:1100px; margin:0 auto; }
-.teams-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:1px; background:#111; }
-.team-card-landing { background:#090909; padding:28px 16px; text-align:center; cursor:pointer; transition:all .2s; text-decoration:none; display:block; position:relative; }
-.team-card-landing:hover { background:#0f0f0f; }
-.team-card-logo { width:60px; height:60px; border-radius:50%; object-fit:contain; margin:0 auto 14px; background:#111; padding:6px; border:1px solid #1e1e1e; display:block; }
-.team-card-logo-placeholder { width:60px; height:60px; border-radius:50%; background:rgba(204,26,26,0.08); border:1px solid rgba(204,26,26,0.2); display:flex; align-items:center; justify-content:center; margin:0 auto 14px; font-family:'Bebas Neue',sans-serif; font-size:18px; color:var(--red); }
-.team-card-name { font-family:'Oswald',sans-serif; font-size:13px; letter-spacing:2px; color:#ccc; margin-bottom:4px; }
-.team-card-city { font-family:'Barlow',sans-serif; font-size:11px; color:#3a3a3a; }
-.team-card-badge { display:inline-flex; align-items:center; gap:4px; font-family:'Oswald',sans-serif; font-size:8px; letter-spacing:2px; padding:3px 8px; margin-top:10px; background:rgba(200,150,62,0.08); color:var(--gold); border:1px solid rgba(200,150,62,0.2); }
-.lp-footer { text-align:center; padding:48px 24px; border-top:1px solid #111; font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:3px; color:#2a2a2a; }
-.lp-footer a { color:#333; text-decoration:none; transition:color .2s; }
-.lp-footer a:hover { color:var(--gold); }
+.teams-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:1px; background:rgba(237,181,24,0.05); }
+.team-card-landing { background:#00060c; padding:28px 16px; text-align:center; cursor:pointer; transition:all .2s; text-decoration:none; display:block; position:relative; }
+.team-card-landing:hover { background:#000d18; }
+.team-card-logo { width:60px; height:60px; border-radius:50%; object-fit:contain; margin:0 auto 14px; background:#000d18; padding:6px; border:1px solid rgba(237,181,24,0.12); display:block; }
+.team-card-logo-placeholder { width:60px; height:60px; border-radius:50%; background:rgba(121,3,29,0.12); border:1px solid rgba(121,3,29,0.3); display:flex; align-items:center; justify-content:center; margin:0 auto 14px; font-family:'Bebas Neue',sans-serif; font-size:18px; color:#EDB518; }
+.team-card-name { font-family:'Oswald',sans-serif; font-size:13px; letter-spacing:2px; color:#F5F7F7; margin-bottom:4px; }
+.team-card-city { font-family:'Barlow',sans-serif; font-size:11px; color:rgba(245,247,247,0.22); }
+.team-card-badge { display:inline-flex; align-items:center; gap:4px; font-family:'Oswald',sans-serif; font-size:8px; letter-spacing:2px; padding:3px 8px; margin-top:10px; background:rgba(237,181,24,0.08); color:#EDB518; border:1px solid rgba(237,181,24,0.2); }
+.lp-footer { text-align:center; padding:48px 24px; border-top:1px solid rgba(237,181,24,0.07); font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:3px; color:rgba(245,247,247,0.14); }
+.lp-footer a { color:rgba(245,247,247,0.22); text-decoration:none; transition:color .2s; }
+.lp-footer a:hover { color:#EDB518; }
 
 /* DIVIDER */
-.lp-stripe { height:1px; background:linear-gradient(90deg, transparent, var(--red) 30%, var(--gold) 70%, transparent); opacity:0.3; }
+.lp-stripe { height:1px; background:linear-gradient(90deg, transparent, #79031D 30%, #EDB518 70%, transparent); opacity:0.55; }
 
 @media(max-width:640px) {
   .lp-nav { padding:16px 20px; }
@@ -2480,9 +2487,9 @@ function buildAdminPanel() {
     const allSubs = groups.flatMap(g => g.subs);
 
     // Render nav
-    navEl.innerHTML = groups.map(g => `
+    navEl.innerHTML = groups.map((g,gi) => `
       <div class="admin-nav-group" id="navgrp-${g.id}">
-        <button class="admin-nav-group-btn" onclick="toggleNavGroup('${g.id}', event)">${g.label} <span class="arrow">▼</span></button>
+        <button class="admin-nav-group-btn${gi===0?' active':''}" id="navbtn-${g.id}">${g.label} <span class="arrow">▼</span></button>
         <div class="admin-nav-dropdown" id="navdrop-${g.id}">
           ${g.subs.map(s => `<button class="admin-nav-sub" id="navsub-${s.id}" onclick="switchNavPane('${s.id}')">${s.label}</button>`).join('')}
         </div>
@@ -2495,9 +2502,6 @@ function buildAdminPanel() {
 
     // Ativa primeiro pane
     switchNavPane('proxjogo');
-
-    // Fecha dropdown ao clicar fora
-    document.addEventListener('click', closeAllNavDropdowns, { once: false, capture: false });
 
   } else {
     // ── TABS SIMPLES para atleta/convidado ──
@@ -2515,43 +2519,34 @@ function buildAdminPanel() {
 }
 
 function toggleNavGroup(groupId, e) {
-  e.stopPropagation();
-  const drop = document.getElementById('navdrop-' + groupId);
-  const btn  = drop?.previousElementSibling;
-  const isOpen = drop?.classList.contains('open');
-  closeAllNavDropdowns();
-  if (!isOpen && drop) {
-    drop.classList.add('open');
-    btn?.classList.add('open');
-  }
+  // Não necessário — hover CSS controla o dropdown.
+  // Mantido para compatibilidade com onclick no HTML.
 }
 
 function closeAllNavDropdowns() {
-  document.querySelectorAll('.admin-nav-dropdown').forEach(d => d.classList.remove('open'));
-  document.querySelectorAll('.admin-nav-group-btn').forEach(b => b.classList.remove('open'));
+  // Não necessário com hover CSS — mantido para compatibilidade.
 }
 
 function switchNavPane(id) {
-  closeAllNavDropdowns();
-  // Garante que o pane existe
-  if (!document.getElementById('pane-' + id)) {
-    const contentEl = document.getElementById('adminContent');
-    const div = document.createElement('div');
-    div.className = 'admin-pane';
-    div.id = 'pane-' + id;
-    contentEl.appendChild(div);
-  }
   document.querySelectorAll('.admin-pane').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.admin-nav-sub').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.admin-nav-group-btn').forEach(b => b.classList.remove('active'));
-  const pane = document.getElementById('pane-' + id);
-  if (pane) pane.classList.add('active');
+  // Garante que o pane existe
+  let pane = document.getElementById('pane-' + id);
+  if (!pane) {
+    const contentEl = document.getElementById('adminContent');
+    pane = document.createElement('div');
+    pane.className = 'admin-pane';
+    pane.id = 'pane-' + id;
+    contentEl.appendChild(pane);
+  }
+  pane.classList.add('active');
   const sub = document.getElementById('navsub-' + id);
   if (sub) {
     sub.classList.add('active');
-    // Marca grupo pai como ativo
     const group = sub.closest('.admin-nav-group');
-    group?.querySelector('.admin-nav-group-btn')?.classList.add('active');
+    const gbtn  = group?.querySelector('.admin-nav-group-btn');
+    if (gbtn) gbtn.classList.add('active');
   }
   renderPane(id);
 }
