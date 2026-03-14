@@ -300,9 +300,10 @@ body { background: var(--black); color: var(--white); font-family: 'Barlow', san
 .admin-nav-group-btn .arrow { font-size:8px; transition:transform .2s; opacity:.5; }
 .admin-nav-group-btn.open .arrow { transform:rotate(180deg); opacity:1; }
 .admin-nav-dropdown {
-  display:none; position:fixed; z-index:9999;
+  display:none; position:fixed; z-index:99999;
   background:#0e0e0e; border:1px solid #2a2a2a; border-top:2px solid var(--red); min-width:200px;
-  box-shadow:0 8px 32px rgba(0,0,0,0.9);
+  box-shadow:0 12px 40px rgba(0,0,0,0.95);
+  /* Dropdown movido para body via JS — escapa de qualquer overflow/stacking context */
 }
 .admin-nav-dropdown.open { display:block; }
 .admin-nav-sub {
@@ -868,15 +869,15 @@ input, select, textarea, button { -webkit-tap-highlight-color: transparent; }
               <div style="font-family:'Oswald',sans-serif;font-size:7px;letter-spacing:2px;color:rgba(255,255,255,0.25);text-align:center;margin-bottom:8px;">4-3-3</div>
               <!-- Atacantes -->
               <div style="display:flex;justify-content:space-around;margin-bottom:8px;">
-                ${['MARCOS','VINí','JAMES'].map(n=>`<div style="width:36px;height:36px;border-radius:50%;background:rgba(121,3,29,0.6);border:1px solid rgba(237,181,24,0.4);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:9px;color:#EDB518;">${n}</div>`).join('')}
+                <div style="width:36px;height:36px;border-radius:50%;background:rgba(121,3,29,0.6);border:1px solid rgba(237,181,24,0.4);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:9px;color:#EDB518;">MARCOS</div><div style="width:36px;height:36px;border-radius:50%;background:rgba(121,3,29,0.6);border:1px solid rgba(237,181,24,0.4);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:9px;color:#EDB518;">VIN&Iacute;</div><div style="width:36px;height:36px;border-radius:50%;background:rgba(121,3,29,0.6);border:1px solid rgba(237,181,24,0.4);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:9px;color:#EDB518;">JAMES</div>
               </div>
               <!-- Meias -->
               <div style="display:flex;justify-content:space-around;margin-bottom:8px;">
-                ${['CARLOS','LUCAS','DIOGO'].map(n=>`<div style="width:36px;height:36px;border-radius:50%;background:rgba(0,4,7,0.8);border:1px solid rgba(245,247,247,0.15);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:9px;color:#aaa;">${n}</div>`).join('')}
+                <div style="width:36px;height:36px;border-radius:50%;background:rgba(0,4,7,0.8);border:1px solid rgba(245,247,247,0.15);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:9px;color:#aaa;">CARLOS</div><div style="width:36px;height:36px;border-radius:50%;background:rgba(0,4,7,0.8);border:1px solid rgba(245,247,247,0.15);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:9px;color:#aaa;">LUCAS</div><div style="width:36px;height:36px;border-radius:50%;background:rgba(0,4,7,0.8);border:1px solid rgba(245,247,247,0.15);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:9px;color:#aaa;">DIOGO</div>
               </div>
               <!-- Defensores -->
               <div style="display:flex;justify-content:space-around;margin-bottom:8px;">
-                ${['ANDRE','THIAGO','IVAN','PAULO'].map(n=>`<div style="width:30px;height:30px;border-radius:50%;background:rgba(0,4,7,0.8);border:1px solid rgba(245,247,247,0.1);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:8px;color:#888;">${n}</div>`).join('')}
+                <div style="width:30px;height:30px;border-radius:50%;background:rgba(0,4,7,0.8);border:1px solid rgba(245,247,247,0.1);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:8px;color:#888;">ANDRE</div><div style="width:30px;height:30px;border-radius:50%;background:rgba(0,4,7,0.8);border:1px solid rgba(245,247,247,0.1);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:8px;color:#888;">THIAGO</div><div style="width:30px;height:30px;border-radius:50%;background:rgba(0,4,7,0.8);border:1px solid rgba(245,247,247,0.1);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:8px;color:#888;">IVAN</div><div style="width:30px;height:30px;border-radius:50%;background:rgba(0,4,7,0.8);border:1px solid rgba(245,247,247,0.1);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:8px;color:#888;">PAULO</div>
               </div>
               <!-- Goleiro -->
               <div style="display:flex;justify-content:center;">
@@ -886,7 +887,7 @@ input, select, textarea, button { -webkit-tap-highlight-color: transparent; }
             <!-- Lista disponíveis -->
             <div style="min-width:80px;">
               <div style="font-family:'Oswald',sans-serif;font-size:7px;letter-spacing:2px;color:rgba(245,247,247,0.3);margin-bottom:6px;">BANCO</div>
-              ${['DINHO','GUILH','DOUG'].map(n=>`<div style="font-family:'Oswald',sans-serif;font-size:9px;color:rgba(245,247,247,0.5);padding:4px 6px;border-bottom:1px solid rgba(245,247,247,0.05);">${n}</div>`).join('')}
+              <div style="font-family:'Oswald',sans-serif;font-size:9px;color:rgba(245,247,247,0.5);padding:4px 6px;border-bottom:1px solid rgba(245,247,247,0.05);">DINHO</div><div style="font-family:'Oswald',sans-serif;font-size:9px;color:rgba(245,247,247,0.5);padding:4px 6px;border-bottom:1px solid rgba(245,247,247,0.05);">GUILH</div><div style="font-family:'Oswald',sans-serif;font-size:9px;color:rgba(245,247,247,0.5);padding:4px 6px;border-bottom:1px solid rgba(245,247,247,0.05);">DOUG</div>
               <div style="margin-top:8px;padding:5px 8px;background:#79031D;font-family:'Oswald',sans-serif;font-size:8px;letter-spacing:1px;color:#F5F7F7;text-align:center;">📋 PUBLICAR</div>
             </div>
           </div>
@@ -907,22 +908,42 @@ input, select, textarea, button { -webkit-tap-highlight-color: transparent; }
           <div style="padding:14px;">
             <!-- Saldo cards -->
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:12px;">
-              ${[['SALDO','R$ 1.240','#EDB518'],['ENTRADAS','R$ 2.100','#2ecc71'],['SAÍDAS','R$ 860','#e74c3c']].map(([l,v,c])=>`
-                <div style="background:rgba(255,255,255,0.03);padding:7px;border:1px solid rgba(255,255,255,0.05);">
-                  <div style="font-family:'Oswald',sans-serif;font-size:7px;letter-spacing:1px;color:#444;">${l}</div>
-                  <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;color:${c};letter-spacing:1px;">${v}</div>
-                </div>`).join('')}
+              <div style="background:rgba(255,255,255,0.03);padding:7px;border:1px solid rgba(255,255,255,0.05);">
+                  <div style="font-family:'Oswald',sans-serif;font-size:7px;letter-spacing:1px;color:#444;">SALDO</div>
+                  <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;color:#EDB518;letter-spacing:1px;">R$ 1.240</div>
+                </div><div style="background:rgba(255,255,255,0.03);padding:7px;border:1px solid rgba(255,255,255,0.05);">
+                  <div style="font-family:'Oswald',sans-serif;font-size:7px;letter-spacing:1px;color:#444;">ENTRADAS</div>
+                  <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;color:#2ecc71;letter-spacing:1px;">R$ 2.100</div>
+                </div><div style="background:rgba(255,255,255,0.03);padding:7px;border:1px solid rgba(255,255,255,0.05);">
+                  <div style="font-family:'Oswald',sans-serif;font-size:7px;letter-spacing:1px;color:#444;">SA&Iacute;DAS</div>
+                  <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;color:#e74c3c;letter-spacing:1px;">R$ 860</div>
+                </div>
             </div>
             <!-- Tabela mini -->
             <div style="font-family:'Oswald',sans-serif;font-size:7px;letter-spacing:1px;color:#555;border-bottom:1px solid #111;padding-bottom:4px;margin-bottom:4px;display:flex;justify-content:space-between;">
               <span>DESCRIÇÃO</span><span>TIPO</span><span>VALOR</span>
             </div>
-            ${[['Mensalidade — Marcelo','📥 Entrada','+ R$ 30'],['Mensalidade — Lucas','📥 Entrada','+ R$ 30'],['Árbitro — Jogo #14','📤 Saída','- R$ 80'],['Mensalidade — Vini','📥 Entrada','+ R$ 30'],['Aluguel Campo','📤 Saída','- R$ 120']].map(([d,t,v])=>`
-              <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.03);">
-                <span style="font-family:'Oswald',sans-serif;font-size:8px;color:rgba(245,247,247,0.5);flex:2;">${d}</span>
-                <span style="font-family:'Oswald',sans-serif;font-size:7px;color:#555;">${t}</span>
-                <span style="font-family:'Oswald',sans-serif;font-size:9px;color:${v.includes('+')?'#2ecc71':'#e74c3c'};min-width:55px;text-align:right;">${v}</span>
-              </div>`).join('')}
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.03);">
+                <span style="font-family:'Oswald',sans-serif;font-size:8px;color:rgba(245,247,247,0.5);flex:2;">Mensalidade &mdash; Marcelo</span>
+                <span style="font-family:'Oswald',sans-serif;font-size:7px;color:#555;">&#128229; Entrada</span>
+                <span style="font-family:'Oswald',sans-serif;font-size:9px;color:#2ecc71;min-width:55px;text-align:right;">+ R$ 30</span>
+              </div><div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.03);">
+                <span style="font-family:'Oswald',sans-serif;font-size:8px;color:rgba(245,247,247,0.5);flex:2;">Mensalidade &mdash; Lucas</span>
+                <span style="font-family:'Oswald',sans-serif;font-size:7px;color:#555;">&#128229; Entrada</span>
+                <span style="font-family:'Oswald',sans-serif;font-size:9px;color:#2ecc71;min-width:55px;text-align:right;">+ R$ 30</span>
+              </div><div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.03);">
+                <span style="font-family:'Oswald',sans-serif;font-size:8px;color:rgba(245,247,247,0.5);flex:2;">&Aacute;rbitro &mdash; Jogo #14</span>
+                <span style="font-family:'Oswald',sans-serif;font-size:7px;color:#555;">&#128228; Sa&iacute;da</span>
+                <span style="font-family:'Oswald',sans-serif;font-size:9px;color:#e74c3c;min-width:55px;text-align:right;">- R$ 80</span>
+              </div><div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.03);">
+                <span style="font-family:'Oswald',sans-serif;font-size:8px;color:rgba(245,247,247,0.5);flex:2;">Mensalidade &mdash; Vini</span>
+                <span style="font-family:'Oswald',sans-serif;font-size:7px;color:#555;">&#128229; Entrada</span>
+                <span style="font-family:'Oswald',sans-serif;font-size:9px;color:#2ecc71;min-width:55px;text-align:right;">+ R$ 30</span>
+              </div><div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.03);">
+                <span style="font-family:'Oswald',sans-serif;font-size:8px;color:rgba(245,247,247,0.5);flex:2;">Aluguel Campo</span>
+                <span style="font-family:'Oswald',sans-serif;font-size:7px;color:#555;">&#128228; Sa&iacute;da</span>
+                <span style="font-family:'Oswald',sans-serif;font-size:9px;color:#e74c3c;min-width:55px;text-align:right;">- R$ 120</span>
+              </div>
             <div style="margin-top:8px;display:flex;gap:4px;">
               <div style="flex:1;padding:4px;background:rgba(46,204,113,0.1);border:1px solid rgba(46,204,113,0.2);font-family:'Oswald',sans-serif;font-size:7px;letter-spacing:1px;color:#2ecc71;text-align:center;">+ ENTRADA</div>
               <div style="flex:1;padding:4px;background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.2);font-family:'Oswald',sans-serif;font-size:7px;letter-spacing:1px;color:#e74c3c;text-align:center;">- SAÍDA</div>
@@ -1030,7 +1051,7 @@ input, select, textarea, button { -webkit-tap-highlight-color: transparent; }
               <div style="font-family:'Barlow',sans-serif;font-size:11px;color:rgba(237,181,24,0.6);">Presidente · Vira Copo FC — Palhoça/SC</div>
             </div>
             <div style="margin-left:auto;display:flex;gap:2px;">
-              ${[1,2,3,4,5].map(()=>'<span style="color:#EDB518;font-size:12px;">★</span>').join('')}
+              <span style="color:#EDB518;font-size:12px;">&#9733;</span><span style="color:#EDB518;font-size:12px;">&#9733;</span><span style="color:#EDB518;font-size:12px;">&#9733;</span><span style="color:#EDB518;font-size:12px;">&#9733;</span><span style="color:#EDB518;font-size:12px;">&#9733;</span>
             </div>
           </div>
         </div>
@@ -1046,7 +1067,7 @@ input, select, textarea, button { -webkit-tap-highlight-color: transparent; }
               <div style="font-family:'Barlow',sans-serif;font-size:11px;color:rgba(237,181,24,0.6);">Presidente · Família Samba FC — Florianópolis/SC</div>
             </div>
             <div style="margin-left:auto;display:flex;gap:2px;">
-              ${[1,2,3,4,5].map(()=>'<span style="color:#EDB518;font-size:12px;">★</span>').join('')}
+              <span style="color:#EDB518;font-size:12px;">&#9733;</span><span style="color:#EDB518;font-size:12px;">&#9733;</span><span style="color:#EDB518;font-size:12px;">&#9733;</span><span style="color:#EDB518;font-size:12px;">&#9733;</span><span style="color:#EDB518;font-size:12px;">&#9733;</span>
             </div>
           </div>
         </div>
@@ -1062,7 +1083,7 @@ input, select, textarea, button { -webkit-tap-highlight-color: transparent; }
               <div style="font-family:'Barlow',sans-serif;font-size:11px;color:rgba(237,181,24,0.6);">Presidente · Rio Grande United — Palhoça/SC</div>
             </div>
             <div style="margin-left:auto;display:flex;gap:2px;">
-              ${[1,2,3,4,5].map(()=>'<span style="color:#EDB518;font-size:12px;">★</span>').join('')}
+              <span style="color:#EDB518;font-size:12px;">&#9733;</span><span style="color:#EDB518;font-size:12px;">&#9733;</span><span style="color:#EDB518;font-size:12px;">&#9733;</span><span style="color:#EDB518;font-size:12px;">&#9733;</span><span style="color:#EDB518;font-size:12px;">&#9733;</span>
             </div>
           </div>
         </div>
@@ -1838,7 +1859,9 @@ async function sbLoad() {
       if (c.key === 'sponsors')          DB.sponsors         = c.value;
       if (c.key === 'convocados')        { try { DB.convocados    = JSON.parse(c.value); } catch(e){} }
       if (c.key === 'caixa')             { try { DB.caixa         = JSON.parse(c.value); } catch(e){} }
-      if (c.key === 'mensalidade_valor') DB.mensalidadeValor = parseFloat(c.value) || 30;
+      if (c.key === 'mensalidade_valor')       DB.mensalidadeValor = parseFloat(c.value) || 30;
+      if (c.key === 'socio_mensalidade_valor') DB.socioMensalidadeValor = parseFloat(c.value) || 20;
+      if (c.key === 'socios')                  { try { DB.socios = JSON.parse(c.value); } catch(e){ DB.socios = []; } }
       if (c.key === 'elenco_seasons')    { try { const es = JSON.parse(c.value); DB.elencoSeasons = es; DB.seasons = es; } catch(e){} }
       if (c.key === 'timeline')          { try { DB.timeline = JSON.parse(c.value); } catch(e){ DB.timeline = []; } }
       if (c.key === 'uniformes')         { try { DB.uniformes = JSON.parse(c.value); } catch(e){} }
@@ -1943,7 +1966,9 @@ async function sbSaveConfig(key) {
   else if (key === 'sponsors')     val = DB.sponsors;
   else if (key === 'convocados')   val = JSON.stringify(DB.convocados || []);
   else if (key === 'caixa')        val = JSON.stringify(DB.caixa || { saldo:0, transacoes:[] });
-  else if (key === 'mensalidade_valor') val = String(DB.mensalidadeValor || 30);
+  else if (key === 'mensalidade_valor')       val = String(DB.mensalidadeValor || 30);
+  else if (key === 'socio_mensalidade_valor') val = String(DB.socioMensalidadeValor || 20);
+  else if (key === 'socios')                  val = JSON.stringify(DB.socios || []);
   else if (key === 'elenco_seasons') val = JSON.stringify(DB.elencoSeasons || {});
   else if (key === 'uniformes')    val = JSON.stringify(DB.uniformes || []);
   else val = null;
@@ -2685,21 +2710,28 @@ function ensureNavListener() {
 }
 
 function toggleNavGroup(groupId) {
-  const drop = document.getElementById('navdrop-' + groupId);
-  const btn  = document.getElementById('navbtn-' + groupId);
-  if (!drop || !btn) return;
+  const btn = document.getElementById('navbtn-' + groupId);
+  if (!btn) return;
+
+  // Portal de dropdown: elemento fora de qualquer overflow container
+  let drop = document.getElementById('navdrop-' + groupId);
+  if (!drop) return;
 
   const isOpen = drop.classList.contains('open');
   closeAllNavDropdowns();
+  if (isOpen) return;
 
-  if (!isOpen) {
-    // Posiciona o dropdown fixo usando as coordenadas do botão
-    const rect = btn.getBoundingClientRect();
-    drop.style.top  = rect.bottom + 'px';
-    drop.style.left = rect.left + 'px';
-    drop.classList.add('open');
-    btn.classList.add('open');
+  // Move dropdown para <body> na primeira abertura (escapa do overflow do nav)
+  if (drop.parentElement !== document.body) {
+    document.body.appendChild(drop);
   }
+
+  // Posiciona com base no botão
+  const rect = btn.getBoundingClientRect();
+  drop.style.top  = rect.bottom + 'px';  // position:fixed usa viewport, não documento
+  drop.style.left = rect.left + 'px';
+  drop.classList.add('open');
+  btn.classList.add('open');
 }
 
 function closeAllNavDropdowns() {
@@ -3613,6 +3645,21 @@ function renderProxJogo(el) {
   // Build field display
   const fieldHtml = buildFieldReadOnly();
 
+  // Uniforme do jogo — calculado antes do template para evitar backtick aninhado
+  const _uniformes = getUniformes();
+  const _atvUnif = _uniformes.find(u => u.id === DB.uniformAtivo) || _uniformes[0];
+  const uniformeProxJogoHtml = _atvUnif ? `<div style="margin-top:14px;padding:14px 16px;background:rgba(0,0,0,0.3);border:1px solid rgba(200,150,62,0.25);display:flex;align-items:center;gap:14px;">
+    ${shirtSVG(_atvUnif.cor1||'#CC1A1A', _atvUnif.cor2||'#111111', 52)}
+    <div>
+      <div style="font-family:'Oswald',sans-serif;font-size:9px;letter-spacing:3px;color:#666;margin-bottom:3px;">UNIFORME DO JOGO</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--white);letter-spacing:2px;">${_atvUnif.nome||'Titular'}</div>
+      <div style="display:flex;gap:6px;margin-top:4px;">
+        <div style="width:14px;height:14px;border-radius:50%;background:${_atvUnif.cor1};border:1px solid #444;"></div>
+        <div style="width:14px;height:14px;border-radius:50%;background:${_atvUnif.cor2};border:1px solid #444;"></div>
+      </div>
+    </div>
+  </div>` : '';
+
   el.innerHTML = `
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:14px;">
       <div class="panel">
@@ -3635,7 +3682,7 @@ function renderProxJogo(el) {
             <div style="font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:3px;color:#666;margin-bottom:8px;">MEU STATUS</div>
             <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:${myColor};">${myStatus}</div>
           </div>
-          ${DB.uniform.active ? `<div style="margin-top:14px;padding:12px;background:rgba(204,26,26,0.1);border:1px solid rgba(204,26,26,0.3);text-align:center;font-family:'Oswald',sans-serif;font-size:13px;letter-spacing:2px;color:var(--red-light);">⚽ UNIFORME: ${DB.uniform.color}</div>` : ''}
+          ${uniformeProxJogoHtml}
         </div>
       </div>
       <div class="panel">
@@ -4786,20 +4833,108 @@ function saveAgenda() {
 // ─── FINANCEIRO ───
 function ensureMonthlyPayments() {
   const months = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-  DB.players.forEach(p => {
-    if (!p.monthlyPayments) {
-      p.monthlyPayments = {};
-      months.forEach(m => { p.monthlyPayments[m] = false; });
-    }
+  // Todos os jogadores/sócios recebem todos os 12 meses
+  const everyone = DB.players.concat(DB.socios || []);
+  everyone.forEach(p => {
+    if (!p.monthlyPayments) p.monthlyPayments = {};
+    // Preenche meses faltantes com false (não apenas se objeto ausente)
+    months.forEach(m => {
+      if (!(m in p.monthlyPayments)) p.monthlyPayments[m] = false;
+    });
   });
 }
+
+function buildSociosTable(socios, months, stIcon, stBg, stColor, valorMensal) {
+  const totalPaidS = function(s) { return months.filter(function(m){ return s.monthlyPayments[m]===true; }).length; };
+  const emDia = socios.filter(function(s){ return totalPaidS(s) >= 6; }).length;
+
+  let thCells = '<th>S\u00f3cio</th>';
+  months.forEach(function(m) {
+    thCells += '<th style="text-align:center;padding:6px 3px;font-size:10px;">' + m + '</th>';
+  });
+  thCells += '<th style="text-align:center;">Pago</th><th></th>';
+
+  let rows = '';
+  socios.forEach(function(s) {
+    const paid = totalPaidS(s);
+    const paidColor = paid>=6 ? 'var(--green)' : paid>=3 ? 'var(--gold)' : 'var(--red-light)';
+    let cells = '';
+    months.forEach(function(m) {
+      const st = s.monthlyPayments[m];
+      const onclk = 'cycleMonth(' + s.id + ',' + JSON.stringify(m) + ',true)';
+      cells += '<td style="text-align:center;padding:3px;">'
+        + '<button onclick="' + onclk + '"'
+        + ' style="width:30px;height:28px;border-radius:3px;border:none;cursor:pointer;font-size:13px;'
+        + 'background:' + stBg(st) + ';color:' + stColor(st) + ';transition:all .15s;">'
+        + stIcon(st) + '</button></td>';
+    });
+    const since = s.since
+      ? '<span style="font-family:\'Oswald\',sans-serif;font-size:9px;color:#555;margin-left:4px;">desde ' + s.since + '</span>'
+      : '';
+    const rmOnclk = 'removeSocio(' + s.id + ')';
+    rows += '<tr>'
+      + '<td style="white-space:nowrap;font-size:13px;">'
+      + '<span style="font-size:11px;color:#4a9eff;margin-right:6px;">\uD83E\uDD1D</span>'
+      + s.name.split(' ')[0] + since + '</td>'
+      + cells
+      + '<td style="text-align:center;font-family:\'Bebas Neue\',sans-serif;font-size:18px;color:' + paidColor + ';">' + paid + '/12</td>'
+      + '<td style="text-align:center;"><button onclick="' + rmOnclk + '" title="Remover"'
+      + ' style="background:rgba(180,0,0,0.2);border:1px solid rgba(180,0,0,0.35);'
+      + 'color:#ff6666;cursor:pointer;padding:3px 8px;font-size:13px;">\uD83D\uDDD1\uFE0F</button></td>'
+      + '</tr>';
+  });
+
+  const val = (typeof valorMensal === 'number' ? valorMensal : 20).toFixed(2);
+  return '<div class="panel" style="margin-top:20px;">'
+    + '<div class="panel-header">'
+    + '<span class="panel-title">\uD83E\uDD1D S\u00d3CIOS \u2014 MENSALIDADE R$ ' + val + '</span>'
+    + '<span class="badge" style="background:rgba(74,158,255,0.15);color:#4a9eff;">' + emDia + '/' + socios.length + ' em dia</span>'
+    + '</div>'
+    + '<div class="panel-body">'
+    + '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">'
+    + '<p style="font-family:\'Oswald\',sans-serif;font-size:11px;letter-spacing:2px;color:#666;margin-bottom:12px;">'
+    + 'Clique \u2192 \u2705 Pago \u00b7 Novamente \u2192 \u2014 Sem cobran\u00e7a \u00b7 Novamente \u2192 \u2b55 Pendente</p>'
+    + '<table class="data-table" style="min-width:750px;">'
+    + '<thead><tr>' + thCells + '</tr></thead>'
+    + '<tbody>' + rows + '</tbody>'
+    + '</table></div></div></div>';
+}
+
+
+function buildAddSocioForm() {
+  var inpStyle = 'background:var(--mid);border:1px solid #444;color:var(--white);padding:8px 10px;font-family:Oswald,sans-serif;font-size:13px;width:100%;outline:none;';
+  return '<div class="panel" style="margin-top:20px;">'
+    + '<div class="panel-header"><span class="panel-title">&#10133; CADASTRAR S&#211;CIO</span></div>'
+    + '<div class="panel-body">'
+    + '<div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:8px;align-items:end;flex-wrap:wrap;">'
+    + '<div class="form-group" style="margin:0;"><label>NOME DO S&#211;CIO</label>'
+    + '<input type="text" id="socioName" placeholder="Nome completo" style="' + inpStyle + '"></div>'
+    + '<div class="form-group" style="margin:0;"><label>TELEFONE</label>'
+    + '<input type="text" id="socioTel" placeholder="(48) 99999-9999" style="' + inpStyle + '"></div>'
+    + '<div class="form-group" style="margin:0;"><label>E-MAIL</label>'
+    + '<input type="text" id="socioEmail" placeholder="email@exemplo.com" style="' + inpStyle + '"></div>'
+    + '<button onclick="addSocio()" class="btn btn-primary" style="padding:9px 16px;white-space:nowrap;">&#129309; CADASTRAR</button>'
+    + '</div>'
+    + '<p style="font-family:Oswald,sans-serif;font-size:10px;letter-spacing:1px;color:#555;margin-top:8px;">'
+    + 'S&#243;cios pagam mensalidade mas n&#227;o jogam. Valor configur&#225;vel acima.</p>'
+    + '</div></div>';
+}
+
 
 function renderFinanceiro(el) {
   ensureMonthlyPayments();
   const u = currentUser;
   const isManager = u.role === 'admin' || u.role === 'diretoria';
   const months = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-  const players = (u.role === 'atleta' || u.role === 'convidado') ? [u] : DB.players.filter(p => p.role !== 'admin').sort((a,b)=>a.name.localeCompare(b.name,'pt'));
+  // Mensalidade: apenas atletas regulares (convidados não pagam mensalidade)
+  const players = (u.role === 'atleta' || u.role === 'diretoria')
+    ? [u]
+    : (u.role === 'convidado')
+    ? []  // convidados não têm mensalidade
+    : DB.players.filter(p => p.role !== 'admin' && p.role !== 'convidado').sort((a,b)=>a.name.localeCompare(b.name,'pt'));
+  // Sócios
+  if (!DB.socios) DB.socios = [];
+  const socios = DB.socios.slice().sort((a,b)=>a.name.localeCompare(b.name,'pt'));
 
   const stIcon  = st => st===true?'✅':st==='skip'?'—':'⭕';
   const stBg    = st => st===true?'rgba(46,204,113,0.15)':st==='skip'?'rgba(255,255,255,0.03)':'rgba(204,26,26,0.07)';
@@ -4946,24 +5081,66 @@ function renderFinanceiro(el) {
       </div>
     </div>` : '';
 
-  el.innerHTML = mensConfig + `
-    ${caixaSection}
-    <div class="panel">
-      <div class="panel-header">
-        <span class="panel-title">💳 MENSALIDADES — TEMPORADA 2026</span>
-        ${isManager ? `<span class="badge badge-green">${overallPaid}/${players.length} em dia</span>` : ''}
-      </div>
-      <div class="panel-body">${table}</div>
-    </div>`;
+  // ── Tabela de sócios (manager only) — usa função externa para evitar backticks aninhados ──
+  const monthlySocioTable = (isManager && socios.length > 0)
+    ? buildSociosTable(socios, months, stIcon, stBg, stColor, DB.socioMensalidadeValor||20)
+    : '';
+
+    const addSocioForm = isManager ? buildAddSocioForm() : '';
+
+  // Build badge string outside template to avoid nesting
+  const _badgeEmDia = isManager
+    ? '<span class="badge badge-green">' + overallPaid + '/' + players.length + ' em dia</span>'
+    : '';
+
+  el.innerHTML = mensConfig
+    + caixaSection
+    + '<div class="panel"><div class="panel-header"><span class="panel-title">💳 MENSALIDADES ATLETAS — 2026</span>'
+    + _badgeEmDia
+    + '</div><div class="panel-body">' + table + '</div></div>'
+    + monthlySocioTable
+    + addSocioForm;
 }
 
 function salvarMensalidadeValor() {
-  const v = parseFloat(document.getElementById('mensValorInput')?.value);
-  if (isNaN(v) || v < 0) { showNotif('Valor inválido!', true); return; }
+  const v  = parseFloat(document.getElementById('mensValorInput')?.value);
+  const vs = parseFloat(document.getElementById('socioValorInput')?.value);
+  if (isNaN(v)  || v  < 0) { showNotif('Valor inválido!', true); return; }
+  if (!isNaN(vs) && vs >= 0) { DB.socioMensalidadeValor = vs; sbSaveConfig('socio_mensalidade_valor'); }
   DB.mensalidadeValor = v;
   sbSaveConfig('mensalidade_valor');
-  showNotif('Mensalidade padrão: R$ ' + v.toFixed(2) + '. Será lançada no caixa ao marcar como pago.');
+  showNotif('💾 Valores salvos: Atleta R$ ' + v.toFixed(2) + ' · Sócio R$ ' + (DB.socioMensalidadeValor||20).toFixed(2));
 }
+
+async function sbSaveSocios() {
+  if (!SB_READY) return;
+  await sbSaveConfig('socios');
+}
+
+function addSocio() {
+  const name = document.getElementById('socioName')?.value?.trim();
+  const email = document.getElementById('socioEmail')?.value?.trim() || '';
+  const telefone = document.getElementById('socioTel')?.value?.trim() || '';
+  if (!name) { showNotif('Informe o nome do sócio!', true); return; }
+  if (!DB.socios) DB.socios = [];
+  const id = Date.now();
+  const months = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  const monthlyPayments = {};
+  months.forEach(m => { monthlyPayments[m] = false; });
+  DB.socios.push({ id, name, email, telefone, monthlyPayments, active:true, since: new Date().toLocaleDateString('pt-BR') });
+  sbSaveSocios();
+  renderPane('financeiro');
+  showNotif('✅ Sócio ' + name + ' cadastrado!');
+}
+
+function removeSocio(id) {
+  if (!confirm('Remover sócio?')) return;
+  DB.socios = (DB.socios||[]).filter(s => s.id !== id);
+  sbSaveSocios();
+  renderPane('financeiro');
+  showNotif('🗑️ Sócio removido.');
+}
+
 
 function addTransacao(sinal) {
   const desc  = document.getElementById('txDesc')?.value?.trim();
@@ -4993,24 +5170,28 @@ function deleteTransacao(id) {
 }
 
 // 3-state cycle: false → true → 'skip' → false
-function cycleMonth(playerId, month) {
+function cycleMonth(playerId, month, isSocio) {
   ensureMonthlyPayments();
-  const p = DB.players.find(x => x.id === playerId);
+  // Busca em players ou socios
+  const list = isSocio ? (DB.socios||[]) : DB.players;
+  const p = list.find(x => x.id === playerId);
   if (!p) return;
   const cur = p.monthlyPayments[month];
   const next = cur === false ? true : cur === true ? 'skip' : false;
   p.monthlyPayments[month] = next;
-  // Auto-registrar no caixa quando marcar como pago
-  if (next === true && (DB.mensalidadeValor||0) > 0) {
+  // Auto-registrar no caixa
+  const valor = isSocio ? (DB.socioMensalidadeValor||20) : (DB.mensalidadeValor||30);
+  if (next === true && valor > 0) {
     if (!DB.caixa) DB.caixa = { saldo:0, transacoes:[] };
-    const v = parseFloat(DB.mensalidadeValor);
+    const v = parseFloat(valor);
     const now = new Date();
     const data = String(now.getDate()).padStart(2,'0') + '/' + String(now.getMonth()+1).padStart(2,'0') + '/' + now.getFullYear();
-    DB.caixa.transacoes.push({ id:Date.now(), desc:'Mensalidade ' + month + ' — ' + p.name.split(' ')[0], valor:v, data });
+    const label = isSocio ? 'Sócio' : 'Mensalidade';
+    DB.caixa.transacoes.push({ id:Date.now(), desc: label + ' ' + month + ' — ' + p.name.split(' ')[0], valor:v, data });
     DB.caixa.saldo = parseFloat((DB.caixa.saldo + v).toFixed(2));
     sbSaveConfig('caixa');
   }
-  sbSavePlayers([playerId]);
+  if (isSocio) sbSaveSocios(); else sbSavePlayers([playerId]);
   renderPane('financeiro');
 }
 
