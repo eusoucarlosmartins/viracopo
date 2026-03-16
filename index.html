@@ -1882,6 +1882,7 @@ async function sbLoad() {
     }
 
     showLoadingOverlay(false);
+    ensureMonthlyPayments(); // garante todos os meses preenchidos após load
     renderPublicSite();
   } catch(e) {
     showLoadingOverlay(false);
@@ -2014,16 +2015,27 @@ async function sbSaveSumula(s) {
   }]);
 }
 async function sbSaveDossie(d) {
-  if (!SB_READY) return;
-  await sbUpsert('dossies', [{
-    id: d.id, date: d.date, adversary: d.adversary,
-    us: d.us, them: d.them, formation: d.formation,
-    pos_slots: d.posSlots||{}, player_ids: d.playerIds||[],
-    scorers: d.scorers||[], assists: d.assists||[],
-    mvp: d.mvp||null, obs: d.obs||'',
-    events: d.events||[],
-    ...(currentTeamId ? { team_id: currentTeamId } : {})
-  }]);
+  if (!SB_READY) { console.warn('sbSaveDossie: Supabase não pronto'); return; }
+  try {
+    const payload = {
+      id: d.id, date: d.date, adversary: d.adversary,
+      us: d.us, them: d.them, formation: d.formation,
+      pos_slots:  d.posSlots  || {},
+      player_ids: d.playerIds || [],
+      scorers:    d.scorers   || [],
+      assists:    d.assists   || [],
+      bench:      d.bench     || [],
+      mvp:        d.mvp       || null,
+      obs:        d.obs       || '',
+      events:     d.events    || [],
+      uniform:    d.uniform   || null,
+      ...(currentTeamId ? { team_id: currentTeamId } : {})
+    };
+    await sbUpsert('dossies', [payload]);
+  } catch(e) {
+    console.error('sbSaveDossie ERROR:', e);
+    showNotif('⚠️ Erro ao salvar súmula: ' + e.message, true);
+  }
 }
 async function sbDeleteDossie(id) {
   if (!SB_READY) return;
@@ -4603,7 +4615,7 @@ function saveDossie(schedDate, schedAdv) {
   }
 
   const entry = {
-    id: existingId ? +existingId : Date.now(),
+    id: existingId ? +existingId : (Math.floor(Date.now()/1000) % 2147483647), // safe Postgres integer
     scheduleDate: schedDate,
     scheduleAdv:  schedAdv,
     date:         schedDate,
@@ -4651,11 +4663,11 @@ function saveDossie(schedDate, schedAdv) {
   }
 
   _dossieEvents = [];
+  _dossiePosSlots = {};
   closeDossieForm();
   renderPane('sumula');
   renderPublicSite();
-  _dossiePosSlots = {};
-  showNotif(`✅ Súmula salva! ${schedAdv} ${us}×${them}`);
+  showNotif('✅ Súmula salva! ' + schedAdv + ' ' + us + '×' + them);
 }
 
 function editDossie(id) {
@@ -5359,8 +5371,13 @@ function salvarMensalidadeValor() {
 }
 
 async function sbSaveSocios() {
-  if (!SB_READY) return;
-  await sbSaveConfig('socios');
+  if (!SB_READY) { console.warn('sbSaveSocios: Supabase não pronto'); return; }
+  try {
+    await sbSaveConfig('socios');
+  } catch(e) {
+    console.error('sbSaveSocios ERROR:', e);
+    showNotif('⚠️ Erro ao salvar sócios: ' + e.message, true);
+  }
 }
 
 function addSocio() {
@@ -5418,10 +5435,14 @@ function deleteTransacao(id) {
 // 3-state cycle: false → true → 'skip' → false
 function cycleMonth(playerId, month, isSocio) {
   ensureMonthlyPayments();
-  // Busca em players ou socios
   const list = isSocio ? (DB.socios||[]) : DB.players;
-  const p = list.find(x => String(x.id) === String(playerId)); // coerce both to string to avoid type mismatch
-  if (!p) return;
+  const p = list.find(x => String(x.id) === String(playerId));
+  if (!p) {
+    console.warn('cycleMonth: jogador/sócio não encontrado', playerId, 'isSocio=', isSocio,
+      'IDs disponíveis:', list.map(x=>x.id));
+    showNotif('Erro: não encontrou o registro. Recarregue a página.', true);
+    return;
+  }
   const cur = p.monthlyPayments[month];
   const next = cur === false ? true : cur === true ? 'skip' : false;
   p.monthlyPayments[month] = next;
