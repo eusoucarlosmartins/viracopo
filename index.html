@@ -1122,7 +1122,7 @@ input, select, textarea, button { -webkit-tap-highlight-color: transparent; }
 <!-- view-blocked removido — suspensão tratada inline no login -->
 
 <!-- ── UNIFORM BANNER ── -->
-<div class="uniform-banner" id="uniformBanner" style="display:none;">⚽ UNIFORME DO PRÓXIMO JOGO: <span id="uniformText">VERMELHO</span></div>
+<div class="uniform-banner" id="uniformBanner" style="display:none;"><span style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:3px;color:rgba(255,255,255,0.5);margin-right:8px;">PRÓXIMO JOGO</span><span id="uniformBannerInner" style="display:flex;align-items:center;"></span></div>
 
 <!-- ── TOP NAV — só aparece nas páginas dos times ── -->
 <nav class="top-nav" style="display:none;">
@@ -2353,10 +2353,24 @@ function renderPublicSite() {
     else mapsDiv.style.display = 'none';
   }
 
-  // ── Uniforme ──
+  // ── Uniforme — só visível para usuários logados ──
   const banner = document.getElementById('uniformBanner');
-  if (DB.uniform.active) { document.getElementById('uniformText').textContent = DB.uniform.color; banner.classList.add('visible'); }
-  else banner.classList.remove('visible');
+  if (DB.uniform.active && currentUser) {
+    const _unis = getUniformes();
+    const _atv  = _unis.find(u => u.id === DB.uniformAtivo) || _unis[0];
+    if (_atv) {
+      const bannerInner = document.getElementById('uniformBannerInner');
+      if (bannerInner) {
+        bannerInner.innerHTML = shirtSVG(_atv.cor1||'#CC1A1A', _atv.cor2||'#111', 28)
+          + '<span style="font-family:Oswald,sans-serif;font-size:12px;letter-spacing:2px;margin-left:10px;">UNIFORME: <strong>' + (_atv.nome||'Titular').toUpperCase() + '</strong></span>';
+      }
+      banner.classList.add('visible');
+    } else {
+      banner.classList.remove('visible');
+    }
+  } else {
+    banner.classList.remove('visible');
+  }
 
   // ── Resultados por temporada — 3 mais recentes ──
   const rtTabs = document.getElementById('resultsSeasonTabs');
@@ -2477,12 +2491,24 @@ function renderPublicSite() {
   // ── Patrocinadores ──
   const spEl = document.getElementById('pubSponsorsGrid');
   if (spEl) {
-    spEl.innerHTML = DB.sponsors.map(s =>
-      '<div class="sponsor-slot" title="' + s.name + '">' +
-      (s.logo ? '<img src="' + s.logo + '" alt="' + s.name + '">' : '<span class="slot-icon">🏢</span><span class="slot-label">' + s.name + '</span>') +
-      '</div>').join('') +
-      '<div class="sponsor-slot" onclick="showNotif(\'Entre em contato! WhatsApp: \' + (TEAM_CONFIG.whatsapp||\'(48) 98475-1343\'))" title="Seja um patrocinador">' +
-      '<span class="slot-icon">➕</span><span class="slot-label">Seja patrocinador</span></div>';
+    const spCards = DB.sponsors.map(s => {
+      // Build href: prefer site, then instagram, then whatsapp
+      const href = s.site ? (s.site.startsWith('http') ? s.site : 'https://' + s.site)
+        : s.instagram ? 'https://instagram.com/' + s.instagram
+        : s.whatsapp  ? 'https://wa.me/' + s.whatsapp.replace(/\D/g,'')
+        : null;
+      const inner = (s.logo
+        ? '<img src="' + s.logo + '" alt="' + s.name + '">'
+        : '<span class="slot-icon">🏢</span><span class="slot-label">' + s.name + '</span>');
+      if (href) {
+        return '<a class="sponsor-slot" href="' + href + '" target="_blank" rel="noopener" title="' + s.name + '" style="text-decoration:none;">' + inner + '</a>';
+      }
+      return '<div class="sponsor-slot" title="' + s.name + '">' + inner + '</div>';
+    }).join('');
+    const ctaWa = 'https://wa.me/' + (TEAM_CONFIG.whatsapp||'+5548984751343').replace(/\D/g,'');
+    spEl.innerHTML = spCards
+      + '<a class="sponsor-slot" href="' + ctaWa + '" target="_blank" rel="noopener" title="Seja um patrocinador" style="text-decoration:none;">'
+      + '<span class="slot-icon">➕</span><span class="slot-label">Seja parceiro</span></a>';
   }
 
   // ── Agenda por temporada ──
@@ -2857,8 +2883,8 @@ function djSetUniform(uid) {
   DB.uniform.active   = true;
   // Atualiza banner do site
   const banner = document.getElementById('uniformBanner');
-  const txt    = document.getElementById('uniformText');
-  if (txt) txt.textContent = u.nome;
+  const _banInn1 = document.getElementById('uniformBannerInner');
+  if (_banInn1 && currentUser) _banInn1.innerHTML = shirtSVG(u.cor1||'#CC1A1A',u.cor2||'#111',28)+'<span style="font-family:Oswald,sans-serif;font-size:12px;letter-spacing:2px;margin-left:10px;">UNIFORME: <strong>'+(u.nome||'Titular').toUpperCase()+'</strong></span>';
   if (banner) banner.classList.add('visible');
   sbSaveConfig('uniform');
   showNotif(`⚽ Uniforme "${u.nome}" selecionado para este jogo!`);
@@ -2879,8 +2905,8 @@ function renderDjConv() {
   if (!el) return;
   const convocados = DB.convocados || [];
   const ng = getNextGame();
-  const allAtletas   = DB.players.filter(p => p.role !== 'admin' && p.role !== 'convidado').sort((a,b)=>a.name.localeCompare(b.name,'pt'));
-  const allConvidados = DB.players.filter(p => p.role === 'convidado').sort((a,b)=>a.name.localeCompare(b.name,'pt'));
+  const allAtletas   = DB.players.filter(p => p.role !== 'admin' && p.role !== 'convidado').sort((a,b) => a.name.localeCompare(b.name,'pt'));
+  const allConvidados = DB.players.filter(p => p.role === 'convidado').sort((a,b) => a.name.localeCompare(b.name,'pt'));
 
   const buildCard = (p, group) => {
     const isConv = convocados.includes(p.id);
@@ -2888,7 +2914,10 @@ function renderDjConv() {
     const photo = p.photo
       ? `<img src="${p.photo}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;flex-shrink:0;">`
       : `<div style="width:34px;height:34px;border-radius:50%;background:#1a1a1a;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:13px;color:var(--gold);">${p.name.substring(0,2).toUpperCase()}</div>`;
-    const paidBadge = group === 'atleta' && p.monthlyPayments
+    // Ícone e cor por categoria
+  const catIcon  = p.role === 'convidado' ? '🎟️' : p.role === 'diretoria' ? '🛡️' : '⚽';
+  const catColor = p.role === 'convidado' ? '#888' : p.role === 'diretoria' ? 'var(--gold)' : '#4a9eff';
+  const paidBadge = group === 'atleta' && p.monthlyPayments
       ? (Object.values(p.monthlyPayments).filter(v=>v===true).length >= 3 ? '<span style="font-size:9px;color:#2ecc71;">✓pago</span>' : '')
       : '';
     return `<div onclick="${isSusp ? `showNotif('${p.name.split(' ')[0]} suspenso!',true)` : `djToggleConv(${p.id})`}"
@@ -3016,7 +3045,11 @@ function renderDjPresenca() {
       <div style="display:flex;align-items:center;gap:10px;">
         <span class="presence-icon">${icon}</span>
         <div>
-          <div class="presence-name">${p.name}${p.role==='convidado'?'<span class="badge badge-guest" style="font-size:9px;margin-left:4px;">Conv</span>':''}</div>
+          <div class="presence-name">
+            <span style="font-size:12px;margin-right:4px;">${p.role==='convidado'?'🎟️':p.role==='diretoria'?'🛡️':'⚽'}</span>
+            <span style="color:${p.role==='convidado'?'#888':p.role==='diretoria'?'var(--gold)':'#4a9eff'}">${p.name}</span>
+            ${p.role==='convidado'?'<span class="badge badge-guest" style="font-size:9px;margin-left:4px;">Conv</span>':''}
+          </div>
           <div class="presence-status">${p.pos}</div>
         </div>
       </div>${ctrl}
@@ -5091,7 +5124,8 @@ function renderMensalidades(el) {
         + stIcon(st) + '</button></td>';
     });
     const photoHtml = p.photo ? '<img src="' + p.photo + '" style="width:22px;height:22px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:6px;">' : '';
-    rows += '<tr><td style="white-space:nowrap;font-size:13px;">' + photoHtml + p.name.split(' ')[0] + (p.suspended?'<span style="font-size:11px;">🚫</span>':'') + '</td>'
+    const roleDot = '<span style="font-size:11px;margin-right:4px;color:#4a9eff;">⚽</span>';
+    rows += '<tr><td style="white-space:nowrap;font-size:13px;">' + roleDot + photoHtml + p.name.split(' ')[0] + (p.suspended?'<span style="font-size:11px;">🚫</span>':'') + '</td>'
       + cells
       + '<td style="text-align:center;font-family:\'Bebas Neue\',sans-serif;font-size:18px;color:' + paidColor + ';">' + paid + '/12</td></tr>';
   });
@@ -5347,7 +5381,7 @@ function addSocio() {
 
 function removeSocio(id) {
   if (!confirm('Remover sócio?')) return;
-  DB.socios = (DB.socios||[]).filter(s => s.id !== id);
+  DB.socios = (DB.socios||[]).filter(s => String(s.id) !== String(id));
   sbSaveSocios();
   renderPane('financeiro');
   showNotif('🗑️ Sócio removido.');
@@ -5386,7 +5420,7 @@ function cycleMonth(playerId, month, isSocio) {
   ensureMonthlyPayments();
   // Busca em players ou socios
   const list = isSocio ? (DB.socios||[]) : DB.players;
-  const p = list.find(x => x.id === playerId);
+  const p = list.find(x => String(x.id) === String(playerId)); // coerce both to string to avoid type mismatch
   if (!p) return;
   const cur = p.monthlyPayments[month];
   const next = cur === false ? true : cur === true ? 'skip' : false;
@@ -5749,42 +5783,67 @@ function promoteUser(id) { changeUserRole(id, 1); }
 
 // ─── PATROCINADORES ───
 function renderPatrocinadores(el) {
-  el.innerHTML = `
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;">
-      <div class="panel">
-        <div class="panel-header"><span class="panel-title">ADICIONAR PATROCINADOR</span></div>
-        <div class="panel-body">
-          <div class="form-group"><label>Nome do Patrocinador</label><input type="text" id="spName" placeholder="Nome da empresa"/></div>
-          <div class="form-group">
-            <label>Logo (imagem)</label>
-            <div style="border:2px dashed #444;padding:20px;text-align:center;cursor:pointer;transition:border-color .2s;" onclick="document.getElementById('spLogoInput').click()" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='#444'">
-              <div id="spLogoPreview" style="font-size:32px;color:#444;margin-bottom:6px;">🏢</div>
-              <div style="font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:2px;color:#666;">Clique para selecionar a logo</div>
-              <input type="file" id="spLogoInput" accept="image/*" style="display:none" onchange="previewSponsorLogo(this)">
-            </div>
-          </div>
-          <button class="btn btn-primary" onclick="addSponsor()">➕ ADICIONAR PATROCINADOR</button>
-        </div>
-      </div>
-      <div class="panel">
-        <div class="panel-header"><span class="panel-title">PATROCINADORES CADASTRADOS</span><span class="badge badge-gold">${DB.sponsors.filter(s=>s.name!=='Patrocinador 1'&&s.name!=='Patrocinador 2'&&s.name!=='Patrocinador 3'||s.logo).length}</span></div>
-        <div class="panel-body">
-          ${DB.sponsors.map((s,i) => `<div style="display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid #222;">
-            <div style="width:50px;height:50px;background:var(--mid);border:1px solid #333;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">
-              ${s.logo ? `<img src="${s.logo}" style="width:100%;height:100%;object-fit:contain;padding:4px;">` : '🏢'}
-            </div>
-            <div style="flex:1;">
-              <input type="text" value="${s.name}" style="background:transparent;border:none;border-bottom:1px solid #333;color:var(--white);font-family:'Oswald',sans-serif;font-size:14px;width:100%;outline:none;padding:2px 0;"
-                onchange="DB.sponsors[${i}].name=this.value;renderPublicSite();">
-            </div>
-            <label style="cursor:pointer;color:var(--gold);font-size:18px;" title="Trocar logo">📷<input type="file" accept="image/*" style="display:none" onchange="updateSponsorLogo(${i},this)"></label>
-            <button style="background:none;border:1px solid #444;color:#888;padding:4px 10px;cursor:pointer;font-size:12px;" onclick="removeSponsor(${i})" title="Remover">✕</button>
-          </div>`).join('')}
-          ${DB.sponsors.length===0?'<p style="color:#555;font-family:\'Oswald\',sans-serif;font-size:13px;letter-spacing:2px;">Nenhum patrocinador cadastrado.</p>':''}
-        </div>
-      </div>
-    </div>`;
+  const inputStyle = 'background:var(--mid);border:1px solid #444;color:var(--white);padding:7px 10px;font-family:Oswald,sans-serif;font-size:13px;width:100%;outline:none;';
+
+  // Lista de patrocinadores cadastrados
+  const listHtml = DB.sponsors.length === 0
+    ? '<p style="color:#555;font-family:Oswald,sans-serif;font-size:13px;letter-spacing:2px;">Nenhum patrocinador cadastrado.</p>'
+    : DB.sponsors.map((s,i) => {
+        const logoHtml = s.logo
+          ? '<img src="' + s.logo + '" style="width:100%;height:100%;object-fit:contain;padding:4px;">'
+          : '<span style="font-size:20px;">🏢</span>';
+        const linksHtml = [
+          s.site      ? '<a href="' + (s.site.startsWith('http')?s.site:'https://'+s.site) + '" target="_blank" style="color:var(--gold);font-size:11px;font-family:Oswald,sans-serif;letter-spacing:1px;text-decoration:none;">🌐 Site</a>' : '',
+          s.instagram ? '<a href="https://instagram.com/' + s.instagram + '" target="_blank" style="color:#e1306c;font-size:11px;font-family:Oswald,sans-serif;letter-spacing:1px;text-decoration:none;">📸 @' + s.instagram + '</a>' : '',
+          s.whatsapp  ? '<a href="https://wa.me/' + s.whatsapp.replace(/\D/g,'') + '" target="_blank" style="color:#25d366;font-size:11px;font-family:Oswald,sans-serif;letter-spacing:1px;text-decoration:none;">💬 WhatsApp</a>' : '',
+        ].filter(Boolean).join('<span style="color:#333;margin:0 4px;">·</span>');
+        const valorHtml = s.gratuito
+          ? '<span style="font-family:Oswald,sans-serif;font-size:10px;letter-spacing:1px;color:var(--gold);background:rgba(200,150,62,0.1);border:1px solid rgba(200,150,62,0.3);padding:2px 7px;">PERMUTA/GRATUITO</span>'
+          : (s.valor > 0 ? '<span style="font-family:\'Bebas Neue\',sans-serif;font-size:16px;color:var(--green);">R$ ' + (s.valor).toFixed(2) + '/mês</span>' : '');
+        return '<div style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid #1e1e1e;">'
+          + '<div style="width:52px;height:52px;background:var(--mid);border:1px solid #333;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' + logoHtml + '</div>'
+          + '<div style="flex:1;min-width:0;">'
+          + '<input type="text" value="' + s.name + '" style="' + inputStyle + 'border:none;border-bottom:1px solid #333;background:transparent;font-size:14px;margin-bottom:4px;" onchange="DB.sponsors[' + i + '].name=this.value;sbSaveConfig(\'sponsors\');renderPublicSite();">'
+          + '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">' + (linksHtml || '<span style="font-family:Oswald,sans-serif;font-size:10px;color:#444;">sem links</span>') + '</div>'
+          + (valorHtml ? '<div style="margin-top:4px;">' + valorHtml + '</div>' : '')
+          + '</div>'
+          + '<label style="cursor:pointer;color:var(--gold);font-size:16px;" title="Trocar logo">📷<input type="file" accept="image/*" style="display:none" onchange="updateSponsorLogo(' + i + ',this)"></label>'
+          + '<button style="background:none;border:1px solid #333;color:#666;padding:4px 10px;cursor:pointer;font-size:11px;" onclick="removeSponsor(' + i + ')">✕</button>'
+          + '</div>';
+      }).join('');
+
+  el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px;">'
+    // Formulário
+    + '<div class="panel"><div class="panel-header"><span class="panel-title">➕ ADICIONAR PATROCINADOR</span></div>'
+    + '<div class="panel-body">'
+    + '<div class="form-group"><label>Nome da Empresa</label><input type="text" id="spName" placeholder="Ex: Padaria do João" style="' + inputStyle + '"></div>'
+    // Logo upload
+    + '<div class="form-group"><label>Logo</label>'
+    + '<div style="border:2px dashed #444;padding:16px;text-align:center;cursor:pointer;transition:border-color .2s;" onclick="document.getElementById(\'spLogoInput\').click()" onmouseover="this.style.borderColor=\'var(--gold)\'" onmouseout="this.style.borderColor=\'#444\'">'
+    + '<div id="spLogoPreview" style="font-size:28px;color:#444;margin-bottom:4px;">🏢</div>'
+    + '<div style="font-family:Oswald,sans-serif;font-size:10px;letter-spacing:2px;color:#555;">Clique para selecionar</div>'
+    + '<input type="file" id="spLogoInput" accept="image/*" style="display:none" onchange="previewSponsorLogo(this)"></div></div>'
+    // Valor / Gratuito
+    + '<div style="display:flex;gap:10px;align-items:flex-end;margin-bottom:14px;flex-wrap:wrap;">'
+    + '<div class="form-group" style="margin:0;flex:1;min-width:100px;"><label>VALOR/MÊS (R$)</label><input type="number" id="spValor" step="0.01" min="0" placeholder="0.00" style="' + inputStyle + '"></div>'
+    + '<label style="display:flex;align-items:center;gap:6px;font-family:Oswald,sans-serif;font-size:11px;letter-spacing:2px;color:var(--gold);cursor:pointer;padding-bottom:8px;white-space:nowrap;">'
+    + '<input type="checkbox" id="spGratuito" style="accent-color:var(--gold);width:16px;height:16px;"> PERMUTA/GRATUITO</label>'
+    + '</div>'
+    // Links
+    + '<div class="form-group"><label>SITE</label><input type="text" id="spSite" placeholder="https://..." style="' + inputStyle + '"></div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">'
+    + '<div class="form-group" style="margin:0;"><label>INSTAGRAM</label><input type="text" id="spInstagram" placeholder="@usuario" style="' + inputStyle + '"></div>'
+    + '<div class="form-group" style="margin:0;"><label>WHATSAPP</label><input type="text" id="spWhatsapp" placeholder="5548999999999" style="' + inputStyle + '"></div>'
+    + '</div>'
+    + '<button class="btn btn-primary" onclick="addSponsor()">➕ ADICIONAR</button>'
+    + '</div></div>'
+    // Lista
+    + '<div class="panel"><div class="panel-header"><span class="panel-title">PATROCINADORES CADASTRADOS</span>'
+    + '<span class="badge badge-gold">' + DB.sponsors.length + '</span></div>'
+    + '<div class="panel-body">' + listHtml + '</div></div>'
+    + '</div>';
 }
+
 
 let pendingSponsorLogo = null;
 function previewSponsorLogo(input) {
@@ -5797,9 +5856,15 @@ function previewSponsorLogo(input) {
   reader.readAsDataURL(file);
 }
 function addSponsor() {
-  const name = document.getElementById('spName').value.trim();
+  const name      = document.getElementById('spName').value.trim();
+  const valor     = parseFloat(document.getElementById('spValor')?.value) || 0;
+  const gratuito  = document.getElementById('spGratuito')?.checked || false;
+  const site      = document.getElementById('spSite')?.value?.trim() || '';
+  const instagram = document.getElementById('spInstagram')?.value?.trim().replace(/^@/,'') || '';
+  const whatsapp  = document.getElementById('spWhatsapp')?.value?.trim() || '';
   if (!name) { showNotif('Digite o nome do patrocinador!', true); return; }
-  DB.sponsors.push({ id: Date.now(), name, logo: pendingSponsorLogo });
+  DB.sponsors.push({ id: Date.now(), name, logo: pendingSponsorLogo,
+    valor, gratuito, site, instagram, whatsapp });
   pendingSponsorLogo = null;
   renderPane('patrocinadores');
   sbSaveConfig('sponsors');
@@ -5972,8 +6037,8 @@ function uSetAtivo(uid) {
   DB.uniform.cor2 = u.cor2;
   // Banner
   const banner = document.getElementById('uniformBanner');
-  const txt    = document.getElementById('uniformText');
-  if (txt) txt.textContent = u.nome;
+  const _banInn1 = document.getElementById('uniformBannerInner');
+  if (_banInn1 && currentUser) _banInn1.innerHTML = shirtSVG(u.cor1||'#CC1A1A',u.cor2||'#111',28)+'<span style="font-family:Oswald,sans-serif;font-size:12px;letter-spacing:2px;margin-left:10px;">UNIFORME: <strong>'+(u.nome||'Titular').toUpperCase()+'</strong></span>';
   if (banner) banner.classList.add('visible');
   sbSaveConfig('uniform');
   sbSaveConfig('uniformes');
@@ -5986,11 +6051,12 @@ function uToggleBanner() {
   if (!DB.uniform) DB.uniform = { color:'', active:false };
   DB.uniform.active = val;
   const banner = document.getElementById('uniformBanner');
-  const txt    = document.getElementById('uniformText');
-  if (val) {
+  if (val && currentUser) {
     const unis = getUniformes();
-    const atv  = unis.find(u=>u.id===DB.uniform?.activeId) || unis[0];
-    if (txt) txt.textContent = atv?.nome || '';
+    const atv  = unis.find(u=>u.id===DB.uniformAtivo) || unis[0];
+    const _bi  = document.getElementById('uniformBannerInner');
+    if (_bi && atv) _bi.innerHTML = shirtSVG(atv.cor1||'#CC1A1A',atv.cor2||'#111',28)
+      +'<span style="font-family:Oswald,sans-serif;font-size:12px;letter-spacing:2px;margin-left:10px;">UNIFORME: <strong>'+(atv.nome||'Titular').toUpperCase()+'</strong></span>';
     banner?.classList.add('visible');
   } else {
     banner?.classList.remove('visible');
