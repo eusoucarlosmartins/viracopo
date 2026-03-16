@@ -1883,6 +1883,7 @@ async function sbLoad() {
 
     showLoadingOverlay(false);
     ensureMonthlyPayments(); // garante todos os meses preenchidos após load
+    recalcStatsFromDossies(); // reconstrói stats a partir dos dossiers
     renderPublicSite();
   } catch(e) {
     showLoadingOverlay(false);
@@ -4549,6 +4550,78 @@ function dossie_setSlotPlayer(key, val) {
   if (fc) fc.innerHTML = buildTacticalField(f, _dossiePosSlots, DB.players.filter(p=>p.role!=='admin'), true, 'dossie_');
 }
 
+// ════════════════════════════════════════════════════════════
+// RECALC STATS — reconstrói games/goals/assists/mvpPts/attendance
+// a partir dos dossiers. Chamado após salvar súmula e após load.
+// É a fonte de verdade: evita acúmulo duplo em edições.
+// ════════════════════════════════════════════════════════════
+function recalcStatsFromDossies() {
+  const dossies = DB.dossies || [];
+  const players = DB.players.filter(p => p.role !== 'admin');
+
+  // Zera tudo
+  players.forEach(p => {
+    p.games    = 0;
+    p.goals    = 0;
+    p.assists  = 0;
+    p.mvpPts   = 0;
+    p.yellowCards = 0;
+    p.redCards    = 0;
+    // suspended é mantido manualmente — não resetar
+  });
+
+  const totalJogos = dossies.length;
+
+  dossies.forEach(d => {
+    const ids = d.playerIds || [];
+    // Titulares
+    ids.forEach(pid => {
+      const p = players.find(x => x.id == pid);
+      if (p) p.games++;
+    });
+    // Goleadores
+    (d.scorers || []).forEach(sc => {
+      if (!sc.gc) { // não contar gols contra
+        const p = players.find(x => x.id == sc.id);
+        if (p) p.goals += (sc.qty || 1);
+      }
+    });
+    // Assistências
+    (d.assists || []).forEach(pid => {
+      const p = players.find(x => x.id == pid);
+      if (p) p.assists++;
+    });
+    // MVP
+    if (d.mvp) {
+      const p = players.find(x => x.id == d.mvp);
+      if (p) p.mvpPts += 5;
+    }
+    // Cartões dos eventos
+    (d.events || []).forEach(ev => {
+      const p = players.find(x => x.id == ev.playerId);
+      if (!p) return;
+      if (ev.type === 'amarelo') p.yellowCards = (p.yellowCards||0) + 1;
+      if (ev.type === 'vermelho') p.redCards   = (p.redCards||0)   + 1;
+    });
+  });
+
+  // Attendance % = jogos participados / total de jogos com resultado
+  const jogosComResultado = dossies.length;
+  if (jogosComResultado > 0) {
+    players.forEach(p => {
+      p.attendance = Math.round((p.games / jogosComResultado) * 100);
+    });
+  }
+
+  // Suspensão automática: 3+ amarelos ou vermelho
+  players.forEach(p => {
+    if (!p.suspended) {
+      if ((p.yellowCards||0) >= 3 || (p.redCards||0) > 0) p.suspended = true;
+    }
+  });
+}
+
+
 function saveDossie(schedDate, schedAdv) {
   const us   = parseInt(document.getElementById('dUs')?.value);
   const them = parseInt(document.getElementById('dThem')?.value);
@@ -4589,27 +4662,13 @@ function saveDossie(schedDate, schedAdv) {
 
   const isNew = !existingId;
 
-  // Atualiza stats dos atletas só em cadastro novo
+  // Stats são recalculados via recalcStatsFromDossies() após salvar
+  // Mantém alerta de suspensão para UX imediato
   if (isNew) {
-    playerIds.forEach(pid => { const p=allP.find(x=>x.id==pid); if(p) p.games++; });
-    scorers.forEach(sc => {
-      if (!sc.gc) { const p=allP.find(x=>x.id==sc.id); if(p) p.goals+=sc.qty; }
-    });
-    assists.forEach(pid => { const p=allP.find(x=>x.id==pid); if(p) p.assists++; });
-    if (mvp) { const p=allP.find(x=>x.id==mvp); if(p) p.mvpPts+=5; }
-
-    // Aplicar cartões dos eventos aos atletas
     _dossieEvents.forEach(ev => {
-      if (ev.type === 'amarelo' && ev.playerId) {
+      if ((ev.type === 'amarelo' || ev.type === 'vermelho') && ev.playerId) {
         const p = allP.find(x=>x.id==ev.playerId);
-        if (p) {
-          p.yellowCards = (p.yellowCards||0)+1;
-          if (p.yellowCards >= 3 && !p.suspended) { p.suspended = true; showNotif('⚠️ ' + p.name.split(' ')[0] + ' — 3 amarelos → SUSPENSO!', true); }
-        }
-      }
-      if (ev.type === 'vermelho' && ev.playerId) {
-        const p = allP.find(x=>x.id==ev.playerId);
-        if (p) { p.redCards = (p.redCards||0)+1; p.suspended = true; }
+        if (p && ev.type === 'vermelho') showNotif('🟥 ' + p.name.split(' ')[0] + ' — CARTÃO VERMELHO → SUSPENSO!', true);
       }
     });
   }
@@ -4639,12 +4698,21 @@ function saveDossie(schedDate, schedAdv) {
   // Atualiza resultado público
   const scorerText = scorers.map(sc => {
     const p = allP.find(x=>x.id==sc.id);
-    return p ? `${p.name.split(' ')[0]} (${sc.qty}${sc.gc?' GC':''})` : '';
+    return p ? p.name.split(' ')[0] + ' (' + sc.qty + (sc.gc?' GC':'') + ')' : '';
   }).filter(Boolean);
+  const assistText = assists.map(pid => {
+    const p = allP.find(x=>x.id==pid);
+    return p ? p.name.split(' ')[0] : '';
+  }).filter(Boolean);
+  // Busca logo do adversário na agenda
+  const gameRef = (DB.scheduleAll[currentSeason]||DB.schedule||[]).find(g=>g.date===schedDate&&g.adversary===schedAdv);
   const resultEntry = {
     id: entry.id, adversary: schedAdv,
     score_us: us, score_them: them,
-    date: schedDate, scorers: scorerText, assists: []
+    date: schedDate,
+    scorers: scorerText,
+    assists: assistText,
+    adversaryLogo: gameRef?.adversaryLogo || null
   };
   const ri = DB.results.findIndex(x => x.id === entry.id);
   if (ri >= 0) DB.results[ri] = resultEntry;
@@ -4656,11 +4724,10 @@ function saveDossie(schedDate, schedAdv) {
 
   sbSaveDossie(entry);
   sbSaveResult(resultEntry);
-  if (isNew) sbSavePlayers(playerIds);
-  if (_dossieEvents.some(ev => ev.type === 'amarelo' || ev.type === 'vermelho')) {
-    const affectedIds = [...new Set(_dossieEvents.filter(ev=>ev.playerId).map(ev=>ev.playerId))];
-    sbSavePlayers(affectedIds);
-  }
+
+  // Sempre recalcula todos os stats a partir dos dossiers e salva
+  recalcStatsFromDossies();
+  sbSavePlayers(); // salva TODOS os jogadores com stats atualizados
 
   _dossieEvents = [];
   _dossiePosSlots = {};
