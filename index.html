@@ -1905,7 +1905,8 @@ async function sbLoad() {
 // ── SAVE helpers — chamados após cada ação ────────────────
 async function sbSavePlayers(ids) {
   if (!SB_READY) return;
-  const list = ids ? DB.players.filter(p => ids.includes(p.id)) : DB.players;
+  const idNums = ids ? ids.map(Number) : null;
+  const list = idNums ? DB.players.filter(p => idNums.includes(p.id)) : DB.players;
   const tid = currentTeamId;
   await sbUpsert('players', list.map(p => ({
     id: p.id, name: p.name, pos: p.pos, num: p.num,
@@ -2184,9 +2185,8 @@ const DB = {
 
 // Retorna stats de uma temporada específica (players snapshot por ano)
 function getSeasonStats(yr) {
-  const y = parseInt(yr) || currentSeason;
-  if (DB.seasons && DB.seasons[y]) return DB.seasons[y];
-  // fallback: stats atuais dos jogadores
+  // Sempre usa DB.players (recalculado de dossiers) como fonte de verdade para ranking
+  // DB.seasons/elencoSeasons é snapshot do elenco (fotos, posições), não de stats
   return DB.players.filter(p => p.role !== 'admin').map(p => ({
     id: p.id, name: p.name, pos: p.pos, num: p.num, photo: p.photo,
     games: p.games, goals: p.goals, assists: p.assists,
@@ -3677,10 +3677,8 @@ function renderRanking(el) {
       + f.icon + ' ' + f.label + '</button>';
   }).join('');
 
-  const yr = (adminRankingSeason === 'current') ? currentSeason : adminRankingSeason;
-  const ps = yr === 'geral'
-    ? [...DB.players].filter(p=>p.role!=='admin')
-    : getSeasonStats(yr).filter(p=>p.role!=='admin');
+  // Sempre lê de DB.players recalculado — única fonte de verdade
+  const ps = [...DB.players].filter(p => p.role !== 'admin');
 
   const medal = i => '<span class="badge ' + (i===0?'badge-gold':i===1?'badge-gray':i===2?'badge-red':'') + '">' + (i+1) + 'º</span>';
   const mkTable = (cols, rows) => '<table class="data-table"><thead><tr>' + cols.map(c=>'<th>'+c+'</th>').join('') + '</tr></thead><tbody>' + rows + '</tbody></table>';
@@ -4622,7 +4620,7 @@ function recalcStatsFromDossies() {
 }
 
 
-function saveDossie(schedDate, schedAdv) {
+async function saveDossie(schedDate, schedAdv) {
   const us   = parseInt(document.getElementById('dUs')?.value);
   const them = parseInt(document.getElementById('dThem')?.value);
   const mvp  = parseInt(document.getElementById('dMvp')?.value)||null;
@@ -4725,9 +4723,9 @@ function saveDossie(schedDate, schedAdv) {
   sbSaveDossie(entry);
   sbSaveResult(resultEntry);
 
-  // Sempre recalcula todos os stats a partir dos dossiers e salva
+  // Recalcula stats de todos e persiste no Supabase
   recalcStatsFromDossies();
-  sbSavePlayers(); // salva TODOS os jogadores com stats atualizados
+  await sbSavePlayers(); // salva TODOS com stats e monthly_payments atualizados
 
   _dossieEvents = [];
   _dossiePosSlots = {};
@@ -5525,13 +5523,19 @@ function cycleMonth(playerId, month, isSocio) {
     DB.caixa.saldo = parseFloat((DB.caixa.saldo + v).toFixed(2));
     sbSaveConfig('caixa');
   }
-  if (isSocio) sbSaveSocios(); else sbSavePlayers([playerId]);
-  // Refresh whichever financial pane is currently active
-  const _activeFin = ['mensalidades','socios','financeiro'].find(id => {
-    const el = document.getElementById('pane-' + id);
-    return el && el.classList.contains('active');
-  });
-  renderPane(_activeFin || 'financeiro');
+  if (isSocio) sbSaveSocios(); else sbSavePlayers([Number(playerId)]);
+  // Refresh pane financeiro ativo
+  const _panesOrder = ['mensalidades','socios','caixa','financeiro'];
+  let _refreshed = false;
+  for (const _pid of _panesOrder) {
+    const _pEl = document.getElementById('pane-' + _pid);
+    if (_pEl && (_pEl.classList.contains('active') || _pEl.style.display !== 'none')) {
+      renderPane(_pid);
+      _refreshed = true;
+      break;
+    }
+  }
+  if (!_refreshed) renderPane('financeiro');
 }
 
 function toggleMonth(playerId, month) { cycleMonth(playerId, month); }
