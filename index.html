@@ -7555,10 +7555,16 @@ function saEditTeam(id) {
           '<div><label style="'+LB+'">WHATSAPP</label><input type="text" id="see_wa" value="'+(t.whatsapp||'')+'" style="'+IS+'"></div>',
           '<div><label style="'+LB+'">INSTAGRAM</label><input type="text" id="see_insta" value="'+(t.instagram||'')+'" style="'+IS+'"></div>',
         '</div>',
-        '<div style="'+FG+'"><label style="'+LB+'">LOGO URL</label>',
-          '<div style="display:flex;gap:8px;align-items:center;">',
-            '<div id="see_logo_prev" style="width:40px;height:40px;border-radius:50%;background:#111;border:1px solid #333;flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-family:Bebas Neue,sans-serif;font-size:14px;color:#555;">'+(t.logo_url?'<img src="'+t.logo_url+'" style="width:100%;height:100%;object-fit:contain;">': (t.name||'?').substring(0,2).toUpperCase())+'</div>',
-            '<input type="text" id="see_logo" value="'+(t.logo_url||'').replace(/"/g,'&quot;')+'" placeholder="https://..." style="'+IS+'flex:1;" oninput="saEditLogoPreview(this.value)">',
+        '<div style="'+FG+'"><label style="'+LB+'">LOGO DO TIME</label>',
+          '<div style="display:flex;gap:10px;align-items:center;">',
+            '<div id="see_logo_prev" style="width:52px;height:52px;border-radius:50%;background:#111;border:2px solid #2a2a2a;flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-family:Bebas Neue,sans-serif;font-size:16px;color:#555;">'+(t.logo_url?'<img src="'+t.logo_url+'" style="width:100%;height:100%;object-fit:contain;">': (t.name||'?').substring(0,2).toUpperCase())+'</div>',
+            '<div style="flex:1;display:flex;flex-direction:column;gap:6px;">',
+              '<label style="display:flex;align-items:center;gap:8px;background:#111;border:1px solid #2a2a2a;padding:7px 12px;cursor:pointer;font-family:Oswald,sans-serif;font-size:11px;letter-spacing:2px;color:#888;" id="see_upload_lbl">',
+                '📁 FAZER UPLOAD',
+                '<input type="file" id="see_logo_file" accept="image/*" style="display:none;">',
+              '</label>',
+              '<input type="text" id="see_logo" value="'+(t.logo_url||'').replace(/"/g,'&quot;')+'" placeholder="ou cole URL aqui..." style="'+IS+'font-size:11px;color:#666;" oninput="saEditLogoPreview(this.value)">',
+            '</div>',
           '</div>',
         '</div>',
 
@@ -7648,6 +7654,21 @@ function saEditTeam(id) {
       document.getElementById('see_pass').value = Math.random().toString(36).slice(-10).toUpperCase();
     });
     document.getElementById('saEditSaveBtn').addEventListener('click', () => saEditSave(id));
+
+    // Logo upload via FileReader
+    const fileInput = document.getElementById('see_logo_file');
+    if (fileInput) {
+      fileInput.addEventListener('change', function() {
+        const file = this.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+          document.getElementById('see_logo').value = e.target.result;
+          saEditLogoPreview(e.target.result);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
   });
 }
 
@@ -8354,17 +8375,17 @@ async function openOpponentSearch(gameIdx, season) {
   document.getElementById('oppSearchResults').innerHTML =
     '<div style="font-family:Oswald,sans-serif;font-size:12px;letter-spacing:2px;color:#555;padding:20px 0;text-align:center;">⏳ CARREGANDO...</div>';
 
-  // Carrega ambos: times ativos + adversários cadastrados
-  const [teams, opps] = await Promise.all([
-    SB_READY ? sbGet('teams', '?order=name').catch(()=>[]) : [],
-    SB_READY ? sbGet('opponents', '?order=name').catch(()=>[]) : [],
-  ]);
-  // Merge: evita duplicatas por nome+cidade
-  const activeTeams = teams
-    .filter(t => t.active !== false && t.slug !== (TEAM_CONFIG.slug||''))
-    .map(t => ({ id:t.id, name:t.name, short_name:t.short_name||t.name, city:t.city||'', neighborhood:t.neighborhood||'', state:t.state||'', logo_url:t.logo_url||null, whatsapp:t.whatsapp||'', type:'active' }));
-  const opponents = opps.map(o => ({...o, type:'opponent'}));
-  _allOpponents = [...activeTeams, ...opponents];
+  // Busca apenas em teams (opponents legada foi unificada em teams)
+  const allTeams = SB_READY ? await sbGet('teams', '?order=name').catch(()=>[]) : [];
+  _allOpponents = allTeams
+    .filter(t => t.slug !== (TEAM_CONFIG.slug||''))  // exclui o próprio time
+    .map(t => ({
+      id: t.id, name: t.name||'', city: t.city||'',
+      neighborhood: t.neighborhood||'', state: t.state||'',
+      logo_url: t.logo_url||null, whatsapp: t.whatsapp||'',
+      type: t.type === 'base' ? 'base' : (t.active ? 'active' : 'base'),
+      slug: t.slug||''
+    }));
 
   document.getElementById('oppSearchInput').focus();
   filterOpponentSearch('');
@@ -8462,15 +8483,12 @@ async function openMatchmaking() {
   const grid = document.getElementById('mmGrid');
   if (grid) grid.innerHTML = '<div class="mm-empty"><div style="font-size:48px;margin-bottom:16px;">⏳</div><div style="font-family:Bebas Neue,sans-serif;font-size:20px;letter-spacing:3px;color:#333;">CARREGANDO TIMES...</div></div>';
 
-  // Carrega times ativos + base de adversários em paralelo
-  const [activeTeams, opponents] = await Promise.all([
-    SB_READY ? sbGet('teams', '?order=name').catch(()=>[]) : [],
-    SB_READY ? sbGet('opponents', '?order=name').catch(()=>[]) : [],
-  ]);
+  // Busca apenas em teams (fonte única — opponents foi unificada)
+  const _allMmRaw = SB_READY ? await sbGet('teams', '?order=name').catch(()=>[]) : [];
 
-  // Normaliza os dois tipos para o mesmo formato
-  const active = activeTeams
-    .filter(t => t.active !== false)
+  // Para o Matchmaking: apenas times com active=true
+  _mmAllTeams = _allMmRaw
+    .filter(t => t.active === true)
     .map(t => ({
       id:             t.id,
       name:           t.name || '',
@@ -8485,13 +8503,9 @@ async function openMatchmaking() {
       time_from:      t.time_from || '',
       time_to:        t.time_to || '',
       mando:          t.mando || 'ambos',
-      type:           'active',
+      type:           t.type || 'active',
       slug:           t.slug || '',
     }));
-
-  const base = opponents.map(o => ({...o, type:'opponent'}));
-
-  _mmAllTeams = [...active, ...base];
 
   // Popula selects de UF e Cidade
   _populateMmSelects(_mmAllTeams);
