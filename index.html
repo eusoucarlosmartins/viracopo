@@ -1367,6 +1367,8 @@ input, select, textarea, button { -webkit-tap-highlight-color: transparent; }
 <!-- ── NOTIFICATION ── -->
 <div class="notif" id="notif"></div>
 
+<!-- DOMPurify: sanitização XSS para todos os innerHTML com dados de usuário -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.5/purify.min.js" integrity="sha512-J5t/PFO2+SI5Q2cFHGBmtDfLmPPOq0H8r0/lp40I9oYrVYlliHJeW4xGBKNFBvNnFfxlwVA/bE5ACe3v9hxg==" crossorigin="anonymous"></script>
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ══════════════════════════════════════════════
 // SUPABASE CONFIG — substitua pelos seus valores
@@ -1692,6 +1694,67 @@ const SUPABASE_KEY  = 'sb_publishable_KDL1chIiMGGQn896N3j8EQ_nuWL0hVt';  // chav
 
 const SB_READY = SUPABASE_URL !== 'COLE_SUA_URL_AQUI';
 
+// ════════════════════════════════════════════════════════════════
+// UTILS — Debounce & sanitização XSS
+// ════════════════════════════════════════════════════════════════
+
+/**
+ * debounce(fn, ms) — evita chamadas repetidas ao Supabase em
+ * interações rápidas (reordenar, editar inline, etc.)
+ * Uso: const dSave = debounce(sbSaveTimeline, 500);
+ */
+function debounce(fn, ms) {
+  let timer;
+  return function(...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn.apply(this, args), ms);
+  };
+}
+
+/**
+ * safeHTML(str) — sanitiza uma string antes de inserir via innerHTML.
+ * Usa DOMPurify se disponível; fallback para escape manual.
+ * Uso: el.innerHTML = safeHTML(userInput);
+ */
+function safeHTML(str) {
+  if (typeof str !== 'string') return '';
+  if (typeof DOMPurify !== 'undefined') {
+    return DOMPurify.sanitize(str, { USE_PROFILES: { html: true } });
+  }
+  // Fallback — escapa tags HTML (sem DOMPurify carregado)
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+/**
+ * safeText(str) — retorna texto puro (remove toda tag HTML).
+ * Ideal para campos onde não há HTML intencional (nomes, obs, etc.)
+ */
+function safeText(str) {
+  if (typeof str !== 'string') return '';
+  if (typeof DOMPurify !== 'undefined') {
+    return DOMPurify.sanitize(str, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] });
+  }
+  return str.replace(/<[^>]*>/g, '');
+}
+
+// Versões debouncadas das funções de save mais chamadas por UI
+// (definidas aqui como let para serem sobrescritas após as funções async existirem)
+let _dbSaveTimeline, _dbSaveSchedule, _dbSaveLineup, _dbSaveConfig, _dbSaveSponsors, _dbSavePlayers;
+// Inicializadas em initDebouncedSaves() chamado após page load
+function initDebouncedSaves() {
+  _dbSaveTimeline  = debounce(sbSaveTimeline,      600);
+  _dbSaveSchedule  = debounce(sbSaveAllSchedule,   600);
+  _dbSaveLineup    = debounce(sbSaveLineup,         400);
+  _dbSaveSponsors  = debounce(() => { sbSaveConfig('sponsors'); renderPublicSite(); }, 500);
+  _dbSavePlayers   = debounce(sbSavePlayers, 600);
+  _dbSaveConfig    = debounce((key) => sbSaveConfig(key), 400);
+}
+
 // Active season for agenda panel
 let currentSeason = 2026;
 
@@ -1884,6 +1947,7 @@ async function sbLoad() {
     showLoadingOverlay(false);
     ensureMonthlyPayments(); // garante todos os meses preenchidos após load
     recalcStatsFromDossies(); // reconstrói stats a partir dos dossiers
+    initDebouncedSaves();     // inicializa funções de save com debounce
     renderPublicSite();
   } catch(e) {
     showLoadingOverlay(false);
@@ -3022,7 +3086,7 @@ function djAddGuest() {
   const pos  = document.getElementById('djGuestPos')?.value.trim() || 'Convidado';
   if (!name) { showNotif('Digite o nome!', true); return; }
   const id = Math.max(...DB.players.map(p=>p.id), 0) + 1;
-  DB.players.push({ id, name, pos, num:id, games:0, goals:0, assists:0, attendance:0, mvpPts:0, paid:false, role:'convidado', user:'conv_'+id, pass:'conv_'+id, trophies:[], monthlyPayments:{}, photo:null, yellowCards:0, redCards:0, suspended:false });
+  DB.players.push({ id, name: safeText(name), pos: safeText(pos), num:id, games:0, goals:0, assists:0, attendance:0, mvpPts:0, paid:false, role:'convidado', user:'conv_'+id, pass:'conv_'+id, trophies:[], monthlyPayments:{}, photo:null, yellowCards:0, redCards:0, suspended:false });
   if (!DB.convocados) DB.convocados = [];
   DB.convocados.push(id);
   DB.checkins[id] = true;
@@ -3214,7 +3278,7 @@ function ddDrop(e, slotKey) {
   DB.lineup.posSlots[slotKey] = _ddDragPid;
   // Atualiza starting
   DB.lineup.starting = Object.values(DB.lineup.posSlots).filter(Boolean).map(Number);
-  sbSaveLineup();
+  if (_dbSaveLineup) _dbSaveLineup(); else sbSaveLineup();
   renderDjEscalacao();
   _ddDragPid = null; _ddFromSlot = null;
 }
@@ -3234,7 +3298,7 @@ function ddDropBench(e) {
 function ddClearSlot(slotKey) {
   delete DB.lineup.posSlots[slotKey];
   DB.lineup.starting = Object.values(DB.lineup.posSlots).filter(Boolean).map(Number);
-  sbSaveLineup();
+  if (_dbSaveLineup) _dbSaveLineup(); else sbSaveLineup();
   renderDjEscalacao();
 }
 
@@ -3622,7 +3686,7 @@ function addGuest() {
   if (!name) { showNotif('Digite o nome do convidado!', true); return; }
   const id = Math.max(...DB.players.map(p => p.id)) + 1;
   const user = 'convidado_' + id;
-  DB.players.push({ id, name, pos, num: id, games:0, goals:0, assists:0, attendance:0, mvpPts:0, paid:false, role:'convidado', user, pass: user, trophies:[], photo:null, yellowCards:0, redCards:0, suspended:false });
+  DB.players.push({ id, name: safeText(name), pos: safeText(pos), num: id, games:0, goals:0, assists:0, attendance:0, mvpPts:0, paid:false, role:'convidado', user: safeText(user), pass: user, trophies:[], photo:null, yellowCards:0, redCards:0, suspended:false });
   DB.checkins[id] = true;
   renderPane('presenca');
   sbSavePlayers([id]);
@@ -3874,7 +3938,7 @@ function setSlotPlayer(key, val) {
   else delete DB.lineup.posSlots[key];
   // rebuild starting list from slots
   DB.lineup.starting = [...new Set(Object.values(DB.lineup.posSlots).filter(Boolean))];
-  sbSaveLineup();
+  if (_dbSaveLineup) _dbSaveLineup(); else sbSaveLineup();
   renderPane('jogo');
 }
 
@@ -3961,7 +4025,7 @@ function setLineupFormation(f) {
   DB.lineup.formation = f;
   DB.lineup.posSlots = {};
   DB.lineup.starting = [];
-  sbSaveLineup();
+  if (_dbSaveLineup) _dbSaveLineup(); else sbSaveLineup();
   renderPane('jogo');
   showNotif(`Formação ${f} selecionada.`);
 }
@@ -4624,7 +4688,7 @@ async function saveDossie(schedDate, schedAdv) {
   const us   = parseInt(document.getElementById('dUs')?.value);
   const them = parseInt(document.getElementById('dThem')?.value);
   const mvp  = parseInt(document.getElementById('dMvp')?.value)||null;
-  const obs  = document.getElementById('dObs')?.value.trim() || '';
+  const obs  = safeText(document.getElementById('dObs')?.value.trim() || '');
   const formation = document.getElementById('dFormation')?.value || '4-3-3';
   const existingId = document.getElementById('dExistingId')?.value;
   let posSlots = {};
@@ -5455,7 +5519,7 @@ function addSocio() {
   const months = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
   const monthlyPayments = {};
   months.forEach(m => { monthlyPayments[m] = false; });
-  DB.socios.push({ id, name, email, telefone, monthlyPayments, active:true, since: new Date().toLocaleDateString('pt-BR') });
+  DB.socios.push({ id, name: safeText(name), email: safeText(email), telefone: safeText(telefone), monthlyPayments, active:true, since: new Date().toLocaleDateString('pt-BR') });
   sbSaveSocios();
   renderPane('financeiro');
   showNotif('✅ Sócio ' + name + ' cadastrado!');
@@ -5856,10 +5920,10 @@ function changeUserRole(id, dir) {
 }
 
 function createUser() {
-  const name = document.getElementById('nuName').value.trim();
-  const user = document.getElementById('nuUser').value.trim();
-  const pass = document.getElementById('nuPass').value;
-  const pos = document.getElementById('nuPos').value;
+  const name = safeText(document.getElementById('nuName').value.trim());
+  const user = safeText(document.getElementById('nuUser').value.trim());
+  const pass = document.getElementById('nuPass').value; // senha não sanitizada — caracteres especiais são válidos
+  const pos = safeText(document.getElementById('nuPos').value);
   const role = document.getElementById('nuRole').value;
   if (!name||!user||!pass) { showNotif('Preencha todos os campos!',true); return; }
   if (DB.players.find(p=>p.user===user)) { showNotif('Login já existe!',true); return; }
@@ -5955,7 +6019,7 @@ function addSponsor() {
   const instagram = document.getElementById('spInstagram')?.value?.trim().replace(/^@/,'') || '';
   const whatsapp  = document.getElementById('spWhatsapp')?.value?.trim() || '';
   if (!name) { showNotif('Digite o nome do patrocinador!', true); return; }
-  DB.sponsors.push({ id: Date.now(), name, logo: pendingSponsorLogo,
+  DB.sponsors.push({ id: Date.now(), name: safeText(name), logo: pendingSponsorLogo,
     valor, gratuito, site, instagram, whatsapp });
   pendingSponsorLogo = null;
   renderPane('patrocinadores');
@@ -6992,15 +7056,15 @@ async function brandingSave() {
   const logoUrl = _brandingLogoDataUrl || document.getElementById('bLogo').value.trim();
 
   const cfg = {
-    name:         document.getElementById('bName').value.trim(),
-    shortName:    document.getElementById('bShortName').value.trim(),
-    city:         document.getElementById('bCity').value.trim(),
-    state:        document.getElementById('bState').value.trim().toUpperCase(),
-    neighborhood: document.getElementById('bNeighborhood').value.trim(),
+    name:         safeText(document.getElementById('bName').value.trim()),
+    shortName:    safeText(document.getElementById('bShortName').value.trim()),
+    city:         safeText(document.getElementById('bCity').value.trim()),
+    state:        safeText(document.getElementById('bState').value.trim().toUpperCase()),
+    neighborhood: safeText(document.getElementById('bNeighborhood').value.trim()),
     foundedYear:  parseInt(document.getElementById('bYear').value) || 2000,
-    slogan:       document.getElementById('bSlogan').value.trim(),
-    tagline:      document.getElementById('bTagline').value.trim(),
-    instagram:    document.getElementById('bInsta').value.trim(),
+    slogan:       safeText(document.getElementById('bSlogan').value.trim()),
+    tagline:      safeText(document.getElementById('bTagline').value.trim()),
+    instagram:    safeText(document.getElementById('bInsta').value.trim()),
     logoUrl,
     colorPrimary:   colors.primary,
     colorSecondary: colors.secondary,
@@ -7155,7 +7219,7 @@ function tlAddItem() {
   const desc  = document.getElementById('tlNewDesc')?.value.trim();
   if (!year || !event) { showNotif('Ano e título são obrigatórios!', true); return; }
   if (!DB.timeline) DB.timeline = [];
-  DB.timeline.push({ year, event, desc });
+  DB.timeline.push({ year: safeText(year), event: safeText(event), desc: safeText(desc) });
   sbSaveTimeline();
   document.getElementById('tlNewYear').value = '';
   document.getElementById('tlNewEvent').value = '';
@@ -7177,7 +7241,8 @@ function tlMoveItem(i, dir) {
   const j = i + dir;
   if (j < 0 || j >= DB.timeline.length) return;
   [DB.timeline[i], DB.timeline[j]] = [DB.timeline[j], DB.timeline[i]];
-  sbSaveTimeline();
+  // debounce: evita N chamadas ao Supabase ao reordenar rapidamente
+  if (typeof _dbSaveTimeline === 'function') _dbSaveTimeline(); else sbSaveTimeline();
   renderTimelineAdminList();
   renderTimelinePublic();
 }
