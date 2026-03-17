@@ -1713,7 +1713,7 @@ function navigateToTeam(slug) {
 
        // ex: https://xyzxyz.supabase.co
 const SUPABASE_URL  = 'https://mxugrdwgancoxkgqlwen.supabase.co';
-const SUPABASE_KEY  = 'sb_publishable_KDL1chIiMGGQn896N3j8EQ_nuWL0hVt';  // chave anon/public
+const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14dWdyZHdnYW5jb3hrZ3Fsd2VuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4MjMyODgsImV4cCI6MjA4ODM5OTI4OH0.D2Cdvn-nX25XaK3mmExEmzfvtyJATeyZAwwt6egGQuo';  // chave anon legacy (JWT)
 
 const SB_READY = SUPABASE_URL !== 'COLE_SUA_URL_AQUI';
 
@@ -5294,7 +5294,9 @@ function renderMensalidades(el) {
     let cells = '';
     months.forEach(m => {
       const st = p.monthlyPayments[m];
-      cells += '<td style="text-align:center;padding:3px;"><button onclick="cycleMonth(' + p.id + ",'" + m + "')"'
+      const _oc = 'cycleMonth(' + p.id + ',"' + m + '")';
+      cells += '<td style="text-align:center;padding:3px;">'
+        + '<button onclick="' + _oc + '"'
         + ' style="width:30px;height:28px;border-radius:3px;border:none;cursor:pointer;font-size:13px;background:' + stBg(st) + ';color:' + stColor(st) + ';transition:all .15s;">'
         + stIcon(st) + '</button></td>';
     });
