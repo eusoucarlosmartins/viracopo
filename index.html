@@ -1654,16 +1654,34 @@ async function loadTeamBySlug(slug) {
 
 // ── Carrega todos os times para a landing page ──
 async function loadAllTeams() {
-  if (!SB_READY) return [];
+  // Fallback local — sempre mostra pelo menos o Vira Copo enquanto Supabase carrega
+  const fallback = [{
+    slug: TEAM_CONFIG.slug || 'viracopo',
+    name: TEAM_CONFIG.name || 'Vira Copo FC',
+    short_name: TEAM_CONFIG.shortName || 'VIRA COPO FC',
+    logo_url: TEAM_CONFIG.logoUrl || null,
+    city: TEAM_CONFIG.city || 'Palhoça',
+    state: TEAM_CONFIG.state || 'SC',
+    plan: TEAM_CONFIG.plan || 'premium',
+    active: true
+  }];
+
+  if (!SB_READY) return fallback;
   try {
-    // Inclui times com active=true OU active=null (apenas false = bloqueado)
-    return await sbGet('teams', '?active=neq.false&order=name');
-  } catch(e) { return []; }
+    // PostgREST: active não é false (inclui true e null)
+    const teams = await sbGet('teams', '?order=name');
+    // Filtra apenas ativos (null ou true = ativo; só false = bloqueado)
+    const active = teams.filter(t => t.active !== false);
+    return active.length ? active : fallback;
+  } catch(e) {
+    console.warn('loadAllTeams falhou, usando fallback:', e.message);
+    return fallback;
+  }
 }
 
 // ── Render landing page ──
 async function renderLanding() {
-  showViewRaw('landing');
+  // NÃO chama showViewRaw aqui — initSaaS já gerencia a view ativa
   const grid = document.getElementById('landingTeamsGrid');
   if (!grid) return;
   grid.innerHTML = '<div style="font-family:Oswald,sans-serif;font-size:12px;letter-spacing:2px;color:#555;grid-column:1/-1;padding:20px 0;">CARREGANDO TIMES...</div>';
@@ -7160,7 +7178,7 @@ async function initSaaS() {
     showViewRaw('site');
     renderPublicSite();
     showSaLoginOverlay();
-    return;
+    return; // IMPORTANTE: não cai no renderLanding abaixo
   }
 
   // ── Sem slug = Landing Page de vendas ──
