@@ -6838,8 +6838,16 @@ async function saveAdversario() {
     mando,
     type:         'opponent',
   };
+  // Gera slug único para times da base (não têm URL pública, mas coluna é NOT NULL)
+  const _baseSlug = 'base-' + name.toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9]/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,'')
+    .substring(0, 30)
+    + '-' + Date.now().toString(36).slice(-4);
+
   // Salva em teams com type='base' — unifica as duas bases
   const teamRow = {
+    slug:           _baseSlug,
     name:           row.name,
     short_name:     row.short_name,
     city:           row.city,
@@ -6853,7 +6861,7 @@ async function saveAdversario() {
     time_to:        row.time_to,
     mando:          row.mando,
     type:           'base',
-    active:         false,  // sem plano = inativo para portal
+    active:         false,
     status:         'base',
   };
   try {
