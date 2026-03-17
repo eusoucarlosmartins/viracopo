@@ -5814,18 +5814,18 @@ async function cycleMonth(playerId, month, isSocio) {
     sbSaveConfig('caixa');
   }
   if (isSocio) await sbSaveSocios(); else await sbSavePlayers([Number(playerId)]);
-  // Refresh pane financeiro ativo
-  const _panesOrder = ['mensalidades','socios','caixa','financeiro'];
+  // Refresh apenas o pane que está realmente ativo
+  const _panesOrder = ['socios','mensalidades','caixa','valoresconfig','financeiro'];
   let _refreshed = false;
   for (const _pid of _panesOrder) {
     const _pEl = document.getElementById('pane-' + _pid);
-    if (_pEl && (_pEl.classList.contains('active') || _pEl.style.display !== 'none')) {
+    if (_pEl && _pEl.classList.contains('active')) {
       renderPane(_pid);
       _refreshed = true;
       break;
     }
   }
-  if (!_refreshed) renderPane('financeiro');
+  if (!_refreshed) renderPane('mensalidades');
 }
 
 function toggleMonth(playerId, month) { cycleMonth(playerId, month); }
