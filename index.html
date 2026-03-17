@@ -1801,15 +1801,15 @@ async function sbLoad() {
     // ── Dispara TODAS as requests em paralelo ──────────────
     const [players, schedule, results, sumulas, checkins, votes, lineup, cfg, dossiesRaw] =
       await Promise.all([
-        sbGet('players',  `?order=id${tf}`),
-        sbGet('schedule', `?order=season,game_date${tf}`),
-        sbGet('results',  `?order=created_at.desc&limit=20${tf}`),
-        sbGet('sumulas',  `?order=created_at.desc${tf}`),
-        sbGet('checkins', tf0),
-        sbGet('votes',    tf0),
-        sbGet('lineup',   currentTeamId ? `?team_id=eq.${currentTeamId}&limit=1` : '?id=eq.1'),
-        sbGet('config',   tf0),
-        sbGet('dossies',  `?order=id.desc${tf}`).catch(() => []),
+        sbGet('players',  `?order=id${tf}`)                                             .catch(e => { console.warn('players:', e.message);  return []; }),
+        sbGet('schedule', `?order=season,game_date${tf}`)                               .catch(e => { console.warn('schedule:', e.message); return []; }),
+        sbGet('results',  `?order=created_at.desc&limit=20${tf}`)                       .catch(e => { console.warn('results:', e.message);  return []; }),
+        sbGet('sumulas',  `?order=created_at.desc${tf}`)                                .catch(e => { console.warn('sumulas:', e.message);  return []; }),
+        sbGet('checkins', tf0)                                                           .catch(e => { console.warn('checkins:', e.message); return []; }),
+        sbGet('votes',    tf0)                                                           .catch(e => { console.warn('votes:', e.message);    return []; }),
+        sbGet('lineup',   currentTeamId ? `?team_id=eq.${currentTeamId}&limit=1` : '?id=eq.1').catch(e => { console.warn('lineup:', e.message);   return []; }),
+        sbGet('config',   tf0)                                                           .catch(e => { console.warn('config:', e.message);   return []; }),
+        sbGet('dossies',  `?order=id.desc${tf}`)                                        .catch(e => { console.warn('dossies:', e.message);  return []; }),
       ]);
 
     // ── players ──────────────────────────────────────────
@@ -1965,7 +1965,17 @@ async function sbLoad() {
       renderPublicSite();
     } else {
       console.error('Supabase load error:', e);
-      showNotif('⚠️ Erro ao carregar dados. Verifique a URL/Key do Supabase.', true);
+      // Mostra mensagem mais útil com o motivo real
+      const errMsg = e.message || String(e);
+      const tableMatch = errMsg.match(/GET (\w+): (\d+)/);
+      if (tableMatch) {
+        const [, tbl, code] = tableMatch;
+        if (code === '404') showNotif('⚠️ Tabela "' + tbl + '" não existe no Supabase. Execute as migrações SQL.', true);
+        else if (code === '401' || code === '403') showNotif('⚠️ Acesso negado na tabela "' + tbl + '". Verifique as políticas RLS.', true);
+        else showNotif('⚠️ Erro na tabela "' + tbl + '" (HTTP ' + code + '). Verifique o Supabase.', true);
+      } else {
+        showNotif('⚠️ Erro ao carregar dados: ' + errMsg.substring(0, 80), true);
+      }
       renderPublicSite();
     }
   }
