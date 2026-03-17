@@ -1869,6 +1869,20 @@ async function sbUpsert(table, body) {
   });
   if (!r.ok) { const t = await r.text(); throw new Error(`UPSERT ${table}: ${r.status} ${t}`); }
 }
+
+// INSERT puro — para novos registros sem id definido
+async function sbInsert(table, body) {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+    method: 'POST',
+    headers: {
+      apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json', Prefer: 'return=representation'
+    },
+    body: JSON.stringify(body)
+  });
+  if (!r.ok) { const t = await r.text(); throw new Error(`INSERT ${table}: ${r.status} ${t}`); }
+  return r.json();
+}
 async function sbDelete(table, filter) {
   const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${filter}`, {
     method: 'DELETE',
@@ -6843,18 +6857,13 @@ async function saveAdversario() {
     status:         'base',
   };
   try {
-    await sbUpsert('teams', [teamRow]);
+    await sbInsert('teams', teamRow);
     showNotif('✅ Time "' + name + '" adicionado à base!');
     renderSaPane('adversarios');
   } catch(e) {
-    // Fallback: tenta opponents legada
-    try {
-      await sbUpsert('opponents', [row]);
-      showNotif('✅ Adversário "' + name + '" cadastrado!');
-      renderSaPane('adversarios');
-    } catch(e2) {
-      showNotif('⚠️ Erro ao salvar: ' + e.message, true);
-    }
+    const msg = e.message || '';
+    console.error('saveAdversario error:', msg);
+    showNotif('⚠️ Erro ao salvar: ' + msg.substring(0, 100), true);
   }
 }
 
@@ -7257,16 +7266,25 @@ async function saCreateTeam() {
   };
 
   try {
-    await sbUpsert('teams', [row]);
-    showNotif(`✅ Time "${name}" cadastrado! URL: ?team=${slug}`);
-    // Mostra resumo antes de ir para a lista
+    // Verifica se slug já existe
+    const existing = await sbGet('teams', '?slug=eq.' + slug + '&limit=1').catch(()=>[]);
+    if (existing.length) {
+      showNotif('Slug "' + slug + '" já está em uso! Escolha outro.', true);
+      if (btn) { btn.textContent = '✓ CADASTRAR TIME'; btn.disabled = false; }
+      return;
+    }
+
+    await sbInsert('teams', row);
+    showNotif('✅ Time "' + name + '" cadastrado! URL: ?team=' + slug);
     const btn2 = document.querySelector('[onclick="saCreateTeam()"]');
     if (btn2) { btn2.textContent = '✓ CADASTRAR TIME'; btn2.disabled = false; }
     saResetForm();
-    // Vai para aba Times após 1s
-    setTimeout(()=> switchSaTab('times', document.querySelector('.sa-tab')), 1000);
+    setTimeout(()=> switchSaTab('times', document.querySelector('.sa-tab')), 800);
   } catch(e) {
-    showNotif('Erro ao cadastrar: ' + (e.message||'verifique o console'), true);
+    // Mostra o erro completo do Supabase para facilitar diagnóstico
+    const msg = e.message || 'Erro desconhecido';
+    console.error('saCreateTeam error:', msg);
+    showNotif('❌ Erro ao cadastrar: ' + msg.substring(0, 120), true);
     if (btn) { btn.textContent = '✓ CADASTRAR TIME'; btn.disabled = false; }
   }
 }
