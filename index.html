@@ -1700,8 +1700,12 @@ async function loadTeamBySlug(slug) {
       neighborhood: t.neighborhood || TEAM_CONFIG.neighborhood || '',
       foundedYear: t.founded_year || TEAM_CONFIG.foundedYear || 2000,
       _foundedYearReal: !!t.founded_year, // flag: indica se veio do banco de verdade
-      instagram: t.instagram || TEAM_CONFIG.instagram || '',
-      whatsapp:  t.whatsapp  || TEAM_CONFIG.whatsapp  || '',
+      instagram:     t.instagram || TEAM_CONFIG.instagram || '',
+      whatsapp:      t.whatsapp  || TEAM_CONFIG.whatsapp  || '',
+      availableDays: t.available_days || [],
+      timeFrom:      t.time_from || '',
+      timeTo:        t.time_to   || '',
+      mando:         t.mando     || 'ambos',
       slogan:    t.slogan    || TEAM_CONFIG.slogan    || '',
       tagline:   t.tagline   || TEAM_CONFIG.tagline   || '',
       active: t.active !== false, // null ou true = ativo; só false = bloqueado
@@ -7414,6 +7418,11 @@ async function sbSaveTeamBranding(cfg) {
     city: cfg.city, state: cfg.state, neighborhood: cfg.neighborhood,
     founded_year: cfg.foundedYear, instagram: cfg.instagram,
     whatsapp: cfg.whatsapp, slogan: cfg.slogan, tagline: cfg.tagline,
+    // Campos de disponibilidade (matchmaking)
+    available_days: cfg.availableDays || [],
+    time_from:      cfg.timeFrom || '',
+    time_to:        cfg.timeTo   || '',
+    mando:          cfg.mando    || 'ambos',
   };
   await fetch(`${SUPABASE_URL}/rest/v1/teams?id=eq.${currentTeamId}`, {
     method:'PATCH',
@@ -7489,6 +7498,118 @@ function renderBrandingPane(el) {
         <div class="form-group"><label>Cor Principal</label><input type="color" id="bColor1" value="${c.colorPrimary||'#CC1A1A'}" oninput="brandingLivePreview()" style="height:40px;"></div>
         <div class="form-group"><label>Cor Secundária</label><input type="color" id="bColor2" value="${c.colorSecondary||'#C8963E'}" oninput="brandingLivePreview()" style="height:40px;"></div>
       </div>
+      <!-- ── DISPONIBILIDADE PARA MATCHMAKING ── -->
+      <div style="margin:24px 0 8px;padding-top:20px;border-top:1px solid #1a1a1a;">
+        <div style="font-family:Oswald,sans-serif;font-size:11px;letter-spacing:2px;color:var(--gold);margin-bottom:16px;">⚔️ DISPONIBILIDADE — MATCHMAKING</div>
+        <div style="font-family:Barlow,sans-serif;font-size:12px;color:#555;margin-bottom:14px;">
+          Informe quando e como seu time costuma jogar. Essas informações aparecem na página de busca de adversários.
+        </div>
+
+        <div class="form-group">
+          <label>DIAS PREFERIDOS</label>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;" id="bDiasWrap">
+            ${(function(){
+              var _diasLabels=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+              return _diasLabels.map(function(d,i){
+                var checked=Array.isArray(c.availableDays)&&c.availableDays.includes(i);
+                return '<label style="display:flex;align-items:center;gap:5px;font-family:Oswald,sans-serif;font-size:12px;letter-spacing:1px;cursor:pointer;padding:6px 12px;border:1px solid '+(checked?'var(--red)':'#2a2a2a')+';background:'+(checked?'rgba(204,26,26,0.1)':'transparent')+';transition:all .15s;">'
+                  +'<input type="checkbox" value="'+i+'" '+(checked?'checked':'')+' style="accent-color:var(--red);" onchange="brandingDayToggle(this)"> '+d
+                  +'</label>';
+              }).join('');
+            })()}
+          </div>
+        </div>
+
+        <div class="grid-2col" style="margin-top:12px;">
+          <div class="form-group">
+            <label>HORÁRIO INÍCIO</label>
+            <input type="time" id="bTimeFrom" value="${c.timeFrom||'16:00'}" style="background:#111;border:1px solid #2a2a2a;color:#ccc;padding:8px 12px;font-family:Oswald,sans-serif;font-size:14px;outline:none;width:100%;">
+          </div>
+          <div class="form-group">
+            <label>HORÁRIO FIM</label>
+            <input type="time" id="bTimeTo" value="${c.timeTo||'18:00'}" style="background:#111;border:1px solid #2a2a2a;color:#ccc;padding:8px 12px;font-family:Oswald,sans-serif;font-size:14px;outline:none;width:100%;">
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top:12px;">
+          <label>MANDO DE CAMPO</label>
+          <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;">
+            ${(function(){
+              var _mandoOpts=[{v:'casa',l:'🏠 Casa'},{v:'visitante',l:'✈️ Visitante'},{v:'ambos',l:'🏠✈️ Ambos'}];
+              return _mandoOpts.map(function(o){
+                var sel=(c.mando||'ambos')===o.v;
+                return '<label style="display:flex;align-items:center;gap:6px;font-family:Oswald,sans-serif;font-size:12px;letter-spacing:1px;cursor:pointer;padding:7px 16px;border:1px solid '+(sel?'var(--red)':'#2a2a2a')+';background:'+(sel?'rgba(204,26,26,0.1)':'transparent')+';">'
+                  +'<input type="radio" name="bMando" value="'+o.v+'" '+(sel?'checked':'')+' style="accent-color:var(--red);"> '+o.l
+                  +'</label>';
+              }).join('');
+            })()}
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top:12px;">
+          <label>WHATSAPP DO RESPONSÁVEL</label>
+          <input type="text" id="bWhatsapp" value="${c.whatsapp||''}" placeholder="5548999999999"
+            style="background:#111;border:1px solid #2a2a2a;color:#ccc;padding:8px 12px;font-family:Oswald,sans-serif;font-size:13px;outline:none;width:100%;box-sizing:border-box;">
+          <div style="font-family:Oswald,sans-serif;font-size:10px;color:#444;margin-top:4px;letter-spacing:1px;">Número com DDD e código do país. Ex: 5548999999999</div>
+        </div>
+      </div>
+
+      <!-- ── DISPONIBILIDADE PARA MATCHMAKING ── -->
+      <div style="margin:24px 0 8px;padding-top:20px;border-top:1px solid #1a1a1a;">
+        <div style="font-family:Oswald,sans-serif;font-size:11px;letter-spacing:2px;color:var(--gold);margin-bottom:16px;">⚔️ DISPONIBILIDADE — MATCHMAKING</div>
+        <div style="font-family:Barlow,sans-serif;font-size:12px;color:#555;margin-bottom:14px;">
+          Informe quando e como seu time costuma jogar. Essas informações aparecem na página de busca de adversários.
+        </div>
+
+        <div class="form-group">
+          <label>DIAS PREFERIDOS</label>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;" id="bDiasWrap">
+${(function(){
+              var _diasLabels=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+              return _diasLabels.map(function(d,i){
+                var checked=Array.isArray(c.availableDays)&&c.availableDays.includes(i);
+                return '<label style="display:flex;align-items:center;gap:5px;font-family:Oswald,sans-serif;font-size:12px;letter-spacing:1px;cursor:pointer;padding:6px 12px;border:1px solid '+(checked?'var(--red)':'#2a2a2a')+';background:'+(checked?'rgba(204,26,26,0.1)':'transparent')+';transition:all .15s;">'
+                  +'<input type="checkbox" value="'+i+'" '+(checked?'checked':'')+' style="accent-color:var(--red);" onchange="brandingDayToggle(this)"> '+d
+                  +'</label>';
+              }).join('');
+            })()}
+          </div>
+        </div>
+
+        <div class="grid-2col" style="margin-top:12px;">
+          <div class="form-group">
+            <label>HORÁRIO INÍCIO</label>
+            <input type="time" id="bTimeFrom" value="${c.timeFrom||'16:00'}" style="background:#111;border:1px solid #2a2a2a;color:#ccc;padding:8px 12px;font-family:Oswald,sans-serif;font-size:14px;outline:none;width:100%;">
+          </div>
+          <div class="form-group">
+            <label>HORÁRIO FIM</label>
+            <input type="time" id="bTimeTo" value="${c.timeTo||'18:00'}" style="background:#111;border:1px solid #2a2a2a;color:#ccc;padding:8px 12px;font-family:Oswald,sans-serif;font-size:14px;outline:none;width:100%;">
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top:12px;">
+          <label>MANDO DE CAMPO</label>
+          <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;">
+${(function(){
+              var _mandoOpts=[{v:'casa',l:'🏠 Casa'},{v:'visitante',l:'✈️ Visitante'},{v:'ambos',l:'🏠✈️ Ambos'}];
+              return _mandoOpts.map(function(o){
+                var sel=(c.mando||'ambos')===o.v;
+                return '<label style="display:flex;align-items:center;gap:6px;font-family:Oswald,sans-serif;font-size:12px;letter-spacing:1px;cursor:pointer;padding:7px 16px;border:1px solid '+(sel?'var(--red)':'#2a2a2a')+';background:'+(sel?'rgba(204,26,26,0.1)':'transparent')+';">'
+                  +'<input type="radio" name="bMando" value="'+o.v+'" '+(sel?'checked':'')+' style="accent-color:var(--red);"> '+o.l
+                  +'</label>';
+              }).join('');
+            })()}
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top:12px;">
+          <label>WHATSAPP DO RESPONSÁVEL</label>
+          <input type="text" id="bWhatsapp" value="${c.whatsapp||''}" placeholder="5548999999999"
+            style="background:#111;border:1px solid #2a2a2a;color:#ccc;padding:8px 12px;font-family:Oswald,sans-serif;font-size:13px;outline:none;width:100%;box-sizing:border-box;">
+          <div style="font-family:Oswald,sans-serif;font-size:10px;color:#444;margin-top:4px;letter-spacing:1px;">Número com DDD e código do país. Ex: 5548999999999</div>
+        </div>
+      </div>
+
       <button class="btn-red" onclick="brandingSave()" style="width:100%;margin-top:12px;">💾 SALVAR IDENTIDADE VISUAL</button>
     </div>`;
 
@@ -7561,16 +7682,24 @@ async function brandingSave() {
   // Logo: preferência ao upload, fallback para URL digitada
   const logoUrl = _brandingLogoDataUrl || document.getElementById('bLogo').value.trim();
 
+  // Lê dias disponíveis marcados
+  const _bDias = [...document.querySelectorAll('#bDiasWrap input[type=checkbox]:checked')].map(cb => parseInt(cb.value));
+
   const cfg = {
-    name:         safeText(document.getElementById('bName').value.trim()),
-    shortName:    safeText(document.getElementById('bShortName').value.trim()),
-    city:         safeText(document.getElementById('bCity').value.trim()),
-    state:        safeText(document.getElementById('bState').value.trim().toUpperCase()),
-    neighborhood: safeText(document.getElementById('bNeighborhood').value.trim()),
-    foundedYear:  parseInt(document.getElementById('bYear').value) || 2000,
-    slogan:       safeText(document.getElementById('bSlogan').value.trim()),
-    tagline:      safeText(document.getElementById('bTagline').value.trim()),
-    instagram:    safeText(document.getElementById('bInsta').value.trim()),
+    name:          safeText(document.getElementById('bName').value.trim()),
+    shortName:     safeText(document.getElementById('bShortName').value.trim()),
+    city:          safeText(document.getElementById('bCity').value.trim()),
+    state:         safeText(document.getElementById('bState').value.trim().toUpperCase()),
+    neighborhood:  safeText(document.getElementById('bNeighborhood').value.trim()),
+    foundedYear:   parseInt(document.getElementById('bYear').value) || 2000,
+    slogan:        safeText(document.getElementById('bSlogan').value.trim()),
+    tagline:       safeText(document.getElementById('bTagline').value.trim()),
+    instagram:     safeText(document.getElementById('bInsta').value.trim()),
+    whatsapp:      document.getElementById('bWhatsapp')?.value?.trim() || '',
+    availableDays: _bDias,
+    timeFrom:      document.getElementById('bTimeFrom')?.value || '',
+    timeTo:        document.getElementById('bTimeTo')?.value || '',
+    mando:         document.querySelector('input[name="bMando"]:checked')?.value || 'ambos',
     logoUrl,
     colorPrimary:   colors.primary,
     colorSecondary: colors.secondary,
@@ -7832,6 +7961,13 @@ function enviarCadastroInteresse() {
   window.open('https://wa.me/5548996962910?text=' + msg, '_blank');
   closeModal();
   showNotif('✅ Redirecionando para o WhatsApp!');
+}
+
+function brandingDayToggle(cb) {
+  const label = cb.closest('label');
+  if (!label) return;
+  label.style.borderColor  = cb.checked ? 'var(--red)' : '#2a2a2a';
+  label.style.background   = cb.checked ? 'rgba(204,26,26,0.1)' : 'transparent';
 }
 
 // ── HELPERS ADVERSÁRIOS ─────────────────────────────────────
